@@ -164,10 +164,7 @@ function AppShell({
         {/* Topbar — always visible */}
         <header
           className="sticky top-0 z-20 px-5 py-3 flex items-center justify-between"
-          style={{
-            background: 'rgba(10,10,10,0.92)',
-            backdropFilter: 'blur(20px)',
-          }}
+          style={{ background: 'var(--bg-gradient)' }}
         >
           {/* Left: hamburger (mobile) + logo (mobile) */}
           <div className="flex items-center gap-3">
