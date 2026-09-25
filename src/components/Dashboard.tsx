@@ -70,45 +70,22 @@ export default function Dashboard({ onNavigate }: Props) {
     <div className="space-y-6">
       {/* Hero */}
       <div
-        className="rounded-3xl p-6 relative overflow-hidden"
-        style={{
-          background: '#0a0a0a',
-          boxShadow: '0 0 80px rgba(255,255,255,0.03)',
-        }}
+        className="rounded-3xl p-6 relative overflow-hidden bg-[var(--surface)] text-[var(--ink)] transition-colors"
       >
-        {/* subtle radial glow top-right */}
-        <div
-          className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)' }}
-        />
         <div className="flex items-center gap-2.5 mb-4 relative">
-          <div
-            className="flex items-center justify-center rounded-xl"
-            style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)' }}
-          >
-            <StrykLogo size={22} />
-          </div>
-          <span className="display text-xl font-bold" style={{ color: '#f5f5f5', letterSpacing: '-0.02em' }}>Stryk</span>
+          <StrykLogo size={22} />
+          <span className="display text-xl font-bold tracking-tight text-[var(--ink)]">Stryk</span>
         </div>
-        <p className="display text-3xl font-bold leading-tight text-balance" style={{ color: '#f5f5f5' }}>
+        <p className="display text-3xl font-bold leading-tight text-balance text-[var(--ink)]">
           Stablecoin Invoicing
-          <br /><span style={{ color: 'rgba(245,245,245,0.55)' }}>& Receivables</span>
+          <br /><span className="text-[var(--muted)]">& Receivables</span>
         </p>
-        <p className="mt-3 text-sm text-pretty" style={{ color: 'rgba(245,245,245,0.5)' }}>
+        <p className="mt-3 text-sm text-pretty text-[var(--muted)]">
           Issue USDC invoices, collect payments, and tokenize overdue receivables as tradeable ERC-20 tokens.
         </p>
         {!isConnected && (
           <div className="mt-5">
-            <ConnectKitButton
-              customTheme={{
-                '--ck-font-family': "'Glacial Indifference', sans-serif",
-                '--ck-primary-button-background': '#f5f5f5',
-                '--ck-primary-button-color': '#0a0a0a',
-                '--ck-primary-button-hover-background': '#ffffff',
-                '--ck-body-background': '#111111',
-                '--ck-body-color': '#f5f5f5',
-              }}
-            />
+            <ConnectKitButton />
           </div>
         )}
       </div>

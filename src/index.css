@@ -2,27 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* ── Stryk palette: deep black + crisp white ── */
-  --bg: #0c0c0c;
-  --bg-gradient: linear-gradient(160deg, #111111 0%, #0a0a0a 60%, #131313 100%);
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-strong: rgba(255, 255, 255, 0.08);
-  --surface-muted: rgba(255, 255, 255, 0.04);
-  --ink: #f5f5f5;
-  --ink-2: #c8c8c8;
-  --muted: #888888;
-  --subtle: #555555;
+:root, [data-theme='light'] {
+  /* ── Light grey palette with no grey borders ── */
+  --bg: #F9FAFB;
+  --bg-gradient: #F9FAFB;
+  --surface: #F3F4F6;
+  --surface-strong: #E5E7EB;
+  --surface-muted: #F3F4F6;
+  --ink: #111827;
+  --ink-2: #374151;
+  --muted: #6B7280;
+  --subtle: #9CA3AF;
   --border: transparent;
   --border-strong: transparent;
-  --accent: #f5f5f5;
-  --accent-hover: #ffffff;
-  --focus: rgba(245, 245, 245, 0.40);
+  --accent: #111827;
+  --accent-hover: #000000;
+  --focus: rgba(0, 0, 0, 0.15);
   --success: #22c55e;
   --danger: #ef4444;
   --warning: #f59e0b;
-  --sidebar-bg: #0a0a0a;
-  --sidebar-border: rgba(255,255,255,0.07);
+  --sidebar-bg: #F3F4F6;
+  --sidebar-border: transparent;
+  --market-input: #F3F4F6;
+  --market-input-border: transparent;
+  --market-button: #E5E7EB;
+  --market-button-hover: #D1D5DB;
+  --market-button-text: #111827;
+}
+
+.dark, [data-theme='dark'] {
+  --bg: #0C0C0E;
+  --bg-gradient: #0C0C0E;
+  --surface: #17181C;
+  --surface-strong: #22242A;
+  --surface-muted: #17181C;
+  --ink: #F3F4F6;
+  --ink-2: #D1D5DB;
+  --muted: #9CA3AF;
+  --subtle: #6B7280;
+  --border: transparent;
+  --border-strong: transparent;
+  --accent: #FFFFFF;
+  --accent-hover: #E5E7EB;
+  --focus: rgba(245, 245, 245, 0.40);
+  --sidebar-bg: #17181C;
+  --sidebar-border: transparent;
+  --market-input: #17181C;
+  --market-input-border: transparent;
+  --market-button: #22242A;
+  --market-button-hover: #2E313A;
+  --market-button-text: #F3F4F6;
 }
 
 * {
@@ -31,10 +60,11 @@
 
 body {
   margin: 0;
-  font-family: 'Glacial Indifference', 'DM Sans', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'DM Sans', sans-serif;
   min-height: 100dvh;
-  background: var(--bg-gradient);
+  background-color: var(--bg);
   color: var(--ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .display { font-family: 'Glacial Indifference', 'Space Grotesk', sans-serif; letter-spacing: -0.01em; }

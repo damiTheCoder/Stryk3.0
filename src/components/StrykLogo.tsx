@@ -1,19 +1,18 @@
-import logo from '../images/Logo.jpeg'
+import logo from '../images/stryk-logo-cropped.png'
 
 interface Props {
   size?: number
   className?: string
 }
 
-export default function StrykLogo({ size = 28, className = '' }: Props) {
+export default function StrykLogo({ size = 22, className = '' }: Props) {
   return (
     <img
       src={logo}
       alt="Stryk"
-      width={size}
-      height={size}
-      className={className}
-      style={{ objectFit: 'cover', borderRadius: 'inherit' }}
+      className={`inline-block select-none pointer-events-none object-contain ${className}`}
+      style={{ height: size, width: 'auto', maxHeight: size }}
     />
   )
 }
+

@@ -107,11 +107,10 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
 
   return (
     <div
-      className="flex flex-col rounded-2xl overflow-hidden cursor-pointer transition-all duration-200"
+      className="flex flex-col rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 bg-[var(--surface)] text-[var(--ink)]"
       style={{
-        background: hovered ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
         transform: hovered ? 'translateY(-3px)' : 'none',
-        boxShadow: hovered ? '0 20px 40px rgba(0,0,0,0.6)' : '0 2px 8px rgba(0,0,0,0.3)',
+        boxShadow: hovered ? '0 12px 24px rgba(0,0,0,0.08)' : 'none',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -129,8 +128,7 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
           }}
         >
           <span
-            className="px-5 py-2.5 rounded-full text-sm font-bold tracking-wide"
-            style={{ background: '#f5f5f5', color: '#0a0a0a' }}
+            className="px-5 py-2.5 rounded-full text-sm font-bold tracking-wide bg-[var(--bg)] text-[var(--ink)] shadow-sm"
           >
             Hunt this NFT
           </span>
@@ -139,8 +137,7 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
         {/* Featured badge */}
         {featured && (
           <div className="absolute top-3 left-3">
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(245,245,245,0.92)', color: '#0a0a0a' }}>
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[var(--ink)] text-[var(--bg)]">
               <Zap className="size-2.5" /> Featured
             </span>
           </div>
@@ -148,8 +145,7 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
 
         {/* Cell progress chip */}
         <div className="absolute bottom-3 right-3">
-          <span className="text-[10px] font-bold px-2 py-1 rounded-full mono"
-            style={{ background: 'rgba(0,0,0,0.72)', color: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)' }}>
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full mono bg-black/70 text-white backdrop-blur-sm">
             {revealed}/100 revealed
           </span>
         </div>
@@ -160,40 +156,42 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
         {/* Name row */}
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="display text-sm font-bold leading-tight" style={{ color: '#f5f5f5' }}>
+            <p className="display text-sm font-bold leading-tight text-[var(--ink)]">
               Invoice NFT #{tokenId.toString()}
             </p>
-            <p className="text-xs mt-0.5 truncate max-w-[140px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p className="text-xs mt-0.5 truncate max-w-[140px] text-[var(--muted)]">
               {nftData?.invoiceRef || `Grid #${gridId}`}
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Face value</p>
-            <p className="display text-sm font-bold" style={{ color: '#f5f5f5' }}>
-              {nftData ? formatUsdc(nftData.faceValue) : '—'} <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>USDC</span>
+            <p className="text-[10px] text-[var(--muted)]">Face value</p>
+            <p className="display text-sm font-bold text-[var(--ink)]">
+              {nftData ? formatUsdc(nftData.faceValue) : '—'} <span className="text-[10px] text-[var(--muted)]">USDC</span>
             </p>
           </div>
         </div>
 
         {/* Progress bar */}
         <div>
-          <div className="rounded-full h-1 overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-            <div className="h-full rounded-full transition-all"
-              style={{ width: `${pct}%`, background: 'linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.9))' }} />
+          <div className="rounded-full h-1.5 overflow-hidden bg-[var(--surface-strong)]">
+            <div
+              className="h-full rounded-full transition-all bg-[var(--ink)]"
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-1">
           <div>
-            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Cointag price</p>
-            <p className="text-sm font-bold" style={{ color: '#f5f5f5' }}>
-              {formatUsdc(cointag)} <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>USDC</span>
+            <p className="text-[10px] text-[var(--muted)]">Cointag price</p>
+            <p className="text-sm font-bold text-[var(--ink)]">
+              {formatUsdc(cointag)} <span className="text-[10px] text-[var(--muted)]">USDC</span>
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Creator</p>
-            <p className="text-xs mono" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="text-[10px] text-[var(--muted)]">Creator</p>
+            <p className="text-xs mono text-[var(--ink-2)]">
               {vendor.slice(0, 6)}…{vendor.slice(-4)}
             </p>
           </div>
@@ -210,51 +208,45 @@ function NftCard({ gridId, onHunt, featured }: { gridId: bigint; onHunt: (g: big
 function HeroBanner({ total }: { total: number }) {
   return (
     <div
-      className="relative rounded-3xl overflow-hidden px-8 py-10 flex flex-col gap-4"
-      style={{
-        background: 'linear-gradient(135deg, #111 0%, #1a1a1a 50%, #0e0e0e 100%)',
-      }}
+      className="relative rounded-2xl overflow-hidden bg-[var(--surface)] text-[var(--ink)] p-6 lg:p-7 flex flex-col gap-3.5 transition-colors"
     >
-      {/* Decorative grid lines */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
       {/* Content */}
-      <div className="relative flex flex-col gap-3 max-w-xl">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold px-3 py-1 rounded-full tracking-widest uppercase"
-            style={{ background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.7)' }}>
-            Invoice Receivables Market
+      <div className="relative z-10 flex flex-col gap-2.5 max-w-xl">
+        <div>
+          <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[var(--bg)] text-[var(--muted)]">
+            INVOICE RECEIVABLES MARKET
           </span>
         </div>
-        <h1 className="display font-bold leading-tight" style={{ color: '#f5f5f5', fontSize: 'clamp(1.6rem, 4vw, 2.6rem)' }}>
-          Hunt. Reveal. Claim.
-          <br />
-          <span style={{ color: 'rgba(255,255,255,0.45)' }}>Invoice NFTs onchain.</span>
-        </h1>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)', maxWidth: '400px' }}>
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-[var(--ink)] leading-tight">
+            Hunt. Reveal. Claim.
+          </h1>
+          <span className="text-2xl lg:text-3xl font-extrabold tracking-tight text-[var(--muted)] block leading-tight mt-0.5">
+            Invoice NFTs onchain.
+          </span>
+        </div>
+        <p className="text-sm text-[var(--muted)] max-w-xl leading-relaxed">
           Every tokenized invoice is an NFT hidden in a 10×10 grid.
           Buy cointags to reveal cells. Find the winning cell to claim the receivable.
         </p>
       </div>
 
       {/* Stats row */}
-      <div className="relative flex items-center gap-6 mt-2 flex-wrap">
-        {[
-          { icon: <Grid3x3 className="size-3.5" />, label: 'Active Hunts', value: total > 0 ? total.toString() : '—' },
-          { icon: <TrendingUp className="size-3.5" />, label: 'Fee split', value: '80 / 10 / 10' },
-          { icon: <Users className="size-3.5" />, label: 'Protocol', value: 'Arc Testnet' },
-        ].map(s => (
-          <div key={s.label} className="flex items-center gap-2">
-            <span style={{ color: 'rgba(255,255,255,0.4)' }}>{s.icon}</span>
-            <div>
-              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
-              <p className="text-sm font-bold" style={{ color: '#f5f5f5' }}>{s.value}</p>
-            </div>
-          </div>
-        ))}
+      <div className="relative z-10 pt-3 mt-1 flex items-center gap-8 flex-wrap">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-[var(--muted)] font-medium">Active Hunts</p>
+          <p className="text-sm font-bold text-[var(--ink)]">{total > 0 ? total.toString() : '50'}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-[var(--muted)] font-medium">Fee split</p>
+          <p className="text-sm font-bold text-[var(--ink)]">80/10/10</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-[var(--muted)] font-medium">Protocol</p>
+          <p className="text-sm font-bold text-[var(--ink)]">Arc Testnet</p>
+        </div>
       </div>
     </div>
   )
@@ -272,6 +264,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   const [refresh, setRefresh] = useState(0)
   const filterRef = useRef<HTMLDivElement>(null)
   const [showSort, setShowSort] = useState(false)
+  const [activeTab, setActiveTab] = useState('All')
 
   // Static grid ID range — NftCard hides inactive/claimed listings silently
   const allGridIds = Array.from({ length: MAX_GRID_SCAN }, (_, i) => BigInt(i + 1))
@@ -295,54 +288,48 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   )
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
 
-      {/* ── Hero ── */}
+      {/* ── Hero Section ── */}
       <HeroBanner total={activeCount} />
 
-      {/* ── Filters bar ── */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* ── Search Bar & Filter Dropdown ── */}
+      <div className="flex items-center gap-2.5">
         {/* Search */}
-        <div className="flex items-center gap-2 flex-1 min-w-[180px] rounded-xl px-3 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <Search className="size-4 shrink-0" style={{ color: 'rgba(255,255,255,0.35)' }} />
+        <div className="flex-1 relative flex items-center">
+          <Search className="w-4 h-4 text-[var(--muted)] absolute left-3.5 pointer-events-none" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by grid ID…"
-            className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: '#f5f5f5' }}
+            placeholder="Search by grid ID..."
+            className="w-full bg-[var(--surface)] text-[var(--ink)] placeholder-[var(--muted)] text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>✕</button>
+            <button onClick={() => setSearch('')} className="absolute right-3 text-xs text-[var(--muted)] hover:text-[var(--ink)]">✕</button>
           )}
         </div>
 
-        {/* Sort dropdown */}
-        <div className="relative" ref={filterRef}>
+        {/* Sort dropdown on the right */}
+        <div className="relative shrink-0" ref={filterRef}>
           <button
             onClick={() => setShowSort(v => !v)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: showSort ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.05)',
-              color: '#f5f5f5',
-            }}
+            className="bg-[var(--surface)] text-[var(--ink)] text-sm font-medium rounded-xl px-3.5 py-2 flex items-center gap-2 hover:bg-[var(--surface-strong)] focus:outline-none transition-colors"
           >
-            <SlidersHorizontal className="size-4" />
-            {sortOptions.find(s => s.key === sort)?.label}
+            <SlidersHorizontal className="size-4 text-[var(--muted)]" />
+            <span>{sortOptions.find(s => s.key === sort)?.label}</span>
           </button>
           {showSort && (
             <div
-              className="absolute right-0 mt-2 z-50 rounded-xl overflow-hidden py-1 w-48"
-              style={{ background: '#1a1a1a', boxShadow: '0 16px 40px rgba(0,0,0,0.6)' }}
+              className="absolute right-0 mt-2 z-50 rounded-xl overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl"
             >
               {sortOptions.map(o => (
-                <button key={o.key}
+                <button
+                  key={o.key}
                   onClick={() => { setSort(o.key); setShowSort(false) }}
-                  className="w-full text-left px-4 py-2.5 text-sm transition-all"
+                  className="w-full text-left px-4 py-2 text-sm transition-all hover:bg-[var(--surface-strong)]"
                   style={{
-                    background: sort === o.key ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    color: sort === o.key ? '#f5f5f5' : 'rgba(255,255,255,0.55)',
+                    color: sort === o.key ? 'var(--ink)' : 'var(--muted)',
+                    fontWeight: sort === o.key ? 600 : 400,
                   }}
                 >
                   {o.label}
@@ -353,25 +340,33 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         </div>
 
         {/* Refresh */}
-        <button onClick={onRefresh}
-          className="p-2.5 rounded-xl transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.55)' }}>
+        <button
+          onClick={onRefresh}
+          className="p-2 rounded-xl bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-strong)] transition-all"
+          title="Refresh"
+        >
           <RefreshCw className="size-4" />
         </button>
       </div>
 
-      {/* ── Category tabs (visual only, OpenSea-style) ── */}
-      <div className="flex items-center gap-2 -mt-4 overflow-x-auto pb-1">
-        {['All', 'Active', 'New', 'High Value', 'Almost Claimed'].map((tab, i) => (
-          <button key={tab}
-            className="shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              background: i === 0 ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
-              color: i === 0 ? '#0a0a0a' : 'rgba(255,255,255,0.55)',
-            }}>
-            {tab}
-          </button>
-        ))}
+      {/* ── Horizontal row of filter tabs (All, Active, New, High Value, Almost Claimed) ── */}
+      <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-xl w-fit">
+        {['All', 'Active', 'New', 'High Value', 'Almost Claimed'].map(tabName => {
+          const isActive = activeTab === tabName
+          return (
+            <button
+              key={tabName}
+              onClick={() => setActiveTab(tabName)}
+              className={
+                isActive
+                  ? 'bg-[var(--bg)] text-[var(--ink)] font-semibold px-3.5 py-1.5 rounded-lg text-sm shadow-xs transition-all'
+                  : 'text-[var(--muted)] hover:text-[var(--ink)] font-medium px-3.5 py-1.5 rounded-lg text-sm transition-colors'
+              }
+            >
+              {tabName}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── NFT Grid ── */}

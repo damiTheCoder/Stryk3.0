@@ -1,12 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ['class', '[data-theme="dark"]'],
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
-      // Add your custom colors, fonts, etc. here
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
     },
   },
   plugins: [],
