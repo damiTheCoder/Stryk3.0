@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { STRYK_GRID_CONTRACT, STRYK_NFT_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 import { formatUsdc } from '@/onchain-money'
+import { LineChart } from './ui/chart'
 
 const GRID_ADDRESS = STRYK_GRID_CONTRACT.address
 const GRID_ABI = STRYK_GRID_CONTRACT.abi
@@ -269,33 +270,23 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     }
   }
 
-  // ── Render Line Chart SVG ─────────────────────────────────────────────────
-  const chartPoints = CHART_DATA[timeframe].points
-  const svgWidth = 800
-  const svgHeight = 260
-  const paddingX = 40
-  const paddingY = 30
-
-  const minVal = Math.min(...chartPoints) * 0.95
-  const maxVal = Math.max(...chartPoints) * 1.05
-
-  const pointsFormatted = chartPoints.map((val, idx) => {
-    const x = paddingX + (idx / (chartPoints.length - 1)) * (svgWidth - paddingX * 2)
-    const y = svgHeight - paddingY - ((val - minVal) / (maxVal - minVal)) * (svgHeight - paddingY * 2)
-    return { x, y, val }
-  })
-
-  const pathD = pointsFormatted.reduce((acc, curr, idx, arr) => {
-    if (idx === 0) return `M ${curr.x} ${curr.y}`
-    const prev = arr[idx - 1]
-    const cx1 = prev.x + (curr.x - prev.x) / 2
-    const cy1 = prev.y
-    const cx2 = prev.x + (curr.x - prev.x) / 2
-    const cy2 = curr.y
-    return `${acc} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${curr.x} ${curr.y}`
-  }, '')
-
-  const areaD = `${pathD} L ${pointsFormatted[pointsFormatted.length - 1].x} ${svgHeight} L ${pointsFormatted[0].x} ${svgHeight} Z`
+  // ── Prepare Data for shadcn LineChart ──────────────────────────────────────
+  const lineChartData = useMemo(() => {
+    const labelsMap: Record<Timeframe, string[]> = {
+      '1H': ['0m', '10m', '20m', '30m', '40m', '50m', '60m', '70m', '80m', '90m', '100m', 'Now'],
+      '1D': ['2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm', 'Now'],
+      '1W': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Today'],
+      '1M': ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'Now'],
+      '1Y': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      'ALL': ['2023', 'Q1', 'Q2', 'Q3', 'Q4', '2024', 'Q1', 'Q2', 'Q3', 'Q4', '2025', 'Now'],
+    }
+    const currentLabels = labelsMap[timeframe]
+    return CHART_DATA[timeframe].points.map((val, idx) => ({
+      label: currentLabels[idx] || `#${idx + 1}`,
+      value: val * 0.000001,
+      meta: `Price: $${(val * 0.000001).toFixed(6)}`,
+    }))
+  }, [timeframe])
 
   return (
     <div className="w-full flex flex-col gap-3 font-sans pb-8 select-none">
@@ -318,12 +309,12 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          STAGE 1: ASSET DETAIL VIEW (Matching First Image)
+          STAGE 1: ASSET DETAIL VIEW (No background, clean shadcn LineChart)
       ═══════════════════════════════════════════════════════════════════════ */}
       {currentView === 'asset-detail' && (
-        <div className="flex flex-col gap-3 animate-in fade-in duration-300">
-          {/* ── Header Bar (Exact match to Image 1) ── */}
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0c0d12] text-white p-3.5 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm border border-neutral-900">
+        <div className="flex flex-col gap-4 animate-in fade-in duration-300 bg-transparent">
+          {/* ── Header Bar (Exact match to Image 1, NO bg) ── */}
+          <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-0">
             {/* Left: Avatar + Title + Icons + Subtitle */}
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Avatar with Verified Badge Overlay */}
@@ -333,7 +324,6 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                   alt="Asset Avatar"
                   className="size-12 sm:size-14 rounded-full object-cover bg-neutral-800"
                   onError={(e) => {
-                    // Fallback to stylized SVG avatar if image fails
                     e.currentTarget.style.display = 'none'
                   }}
                 />
@@ -347,27 +337,27 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               <div className="flex flex-col gap-1">
                 {/* Name & Social Icons Row */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-white uppercase">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-[var(--ink)] uppercase">
                     MUSEBOOK
                   </h1>
 
                   {/* Icon set matching Image 1: feather, tv, divider, globe, x, search, star */}
                   <div className="flex items-center gap-1.5 ml-1">
-                    <span className="size-5 rounded flex items-center justify-center bg-white/10 text-neutral-300 hover:text-white transition-colors cursor-pointer">
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs">
                       <Feather className="size-3" />
                     </span>
 
-                    <span className="size-5 rounded flex items-center justify-center bg-purple-500/20 text-purple-300 hover:text-purple-200 transition-colors cursor-pointer">
+                    <span className="size-5 rounded flex items-center justify-center bg-purple-500/15 text-purple-500 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer shadow-xs">
                       <Tv className="size-3" />
                     </span>
 
-                    <span className="text-neutral-600 text-xs px-0.5">|</span>
+                    <span className="text-[var(--muted)] opacity-40 text-xs px-0.5">|</span>
 
                     <a
                       href="https://arc.network"
                       target="_blank"
                       rel="noreferrer"
-                      className="size-5 rounded flex items-center justify-center bg-white/10 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs"
                     >
                       <Globe className="size-3" />
                     </a>
@@ -376,12 +366,12 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                       href="https://x.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="size-5 rounded flex items-center justify-center bg-white/10 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs"
                     >
                       <span className="font-bold text-[10px] leading-none">𝕏</span>
                     </a>
 
-                    <span className="size-5 rounded flex items-center justify-center bg-white/10 text-neutral-300 hover:text-white transition-colors cursor-pointer">
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs">
                       <Search className="size-3" />
                     </span>
 
@@ -391,63 +381,63 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                         setIsStarred(s => !s)
                         toast.success(!isStarred ? 'Added to Watchlist!' : 'Removed from Watchlist')
                       }}
-                      className="size-5 rounded flex items-center justify-center bg-white/10 text-neutral-300 hover:text-amber-400 transition-colors cursor-pointer"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-amber-500 transition-colors cursor-pointer shadow-xs"
                     >
-                      <Star className={`size-3 ${isStarred ? 'text-amber-400 fill-amber-400' : ''}`} />
+                      <Star className={`size-3 ${isStarred ? 'text-amber-500 fill-amber-500' : ''}`} />
                     </button>
                   </div>
                 </div>
 
                 {/* Sub-row: ticker | timeframe | contract address + copy button */}
-                <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-medium">
-                  <span className="lowercase font-semibold text-neutral-300">musebook</span>
-                  <span className="text-neutral-600">|</span>
+                <div className="flex items-center gap-2 text-[11px] text-[var(--muted)] font-medium">
+                  <span className="lowercase font-semibold text-[var(--ink)]">musebook</span>
+                  <span className="opacity-40">|</span>
                   <span>1w</span>
-                  <span className="text-neutral-600">|</span>
+                  <span className="opacity-40">|</span>
                   <button
                     type="button"
                     onClick={copyContractAddress}
-                    className="flex items-center gap-1 font-mono text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center gap-1 font-mono text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
                   >
                     <span>{contractAddressDisplay}</span>
-                    {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+                    {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Right: Market Cap & Price Stats (Matching Image 1) */}
-            <div className="flex items-center gap-6 md:gap-8 self-end md:self-center">
+            <div className="flex items-center gap-6 md:gap-8 self-start md:self-center">
               <div className="flex flex-col items-start md:items-end">
-                <span className="text-[11px] font-medium text-neutral-400">Market cap</span>
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                <span className="text-[11px] font-medium text-[var(--muted)]">Market cap</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)]">
                   $10.7M
                 </span>
               </div>
 
               <div className="flex flex-col items-start md:items-end">
-                <span className="text-[11px] font-medium text-neutral-400">Price</span>
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-mono">
+                <span className="text-[11px] font-medium text-[var(--muted)]">Price</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)] font-mono">
                   $0.000108
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ── Line Chart Beneath It (Interactive SVG Chart) ── */}
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0c0d12] text-white p-3.5 sm:p-5 flex flex-col gap-4 shadow-sm border border-neutral-900">
+          {/* ── Line Chart Beneath It (shadcn UI LineChart, NO bg) ── */}
+          <div className="bg-transparent text-[var(--ink)] p-0 sm:p-1 flex flex-col gap-3 border-0">
             {/* Chart Controls & Timeframe Selector */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
                   <TrendingUp className="size-4" />
                   <span>{CHART_DATA[timeframe].change}</span>
                 </div>
-                <span className="text-xs text-neutral-400">Past {timeframe}</span>
+                <span className="text-xs text-[var(--muted)]">Past {timeframe}</span>
               </div>
 
               {/* Timeframe Pills */}
-              <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl">
+              <div className="flex items-center gap-1 bg-[var(--surface)] p-1 rounded-xl shadow-xs">
                 {(['1H', '1D', '1W', '1M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                   <button
                     key={tf}
@@ -456,7 +446,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       timeframe === tf
                         ? 'bg-[#2563EB] text-white shadow-xs'
-                        : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                        : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-strong)]'
                     }`}
                   >
                     {tf}
@@ -465,111 +455,47 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </div>
             </div>
 
-            {/* SVG Line Chart Canvas */}
-            <div className="relative w-full h-[220px] sm:h-[260px] overflow-hidden rounded-xl bg-gradient-to-b from-white/[0.02] to-transparent">
-              <svg
-                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                className="w-full h-full preserve-3d"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563EB" stopOpacity="0.4" />
-                    <stop offset="60%" stopColor="#2563EB" stopOpacity="0.08" />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
-                  </linearGradient>
-                  <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#60A5FA" />
-                    <stop offset="50%" stopColor="#3B82F6" />
-                    <stop offset="100%" stopColor="#2563EB" />
-                  </linearGradient>
-                </defs>
-
-                {/* Subtle horizontal grid lines */}
-                {[0.25, 0.5, 0.75].map((pct) => (
-                  <line
-                    key={pct}
-                    x1="0"
-                    y1={svgHeight * pct}
-                    x2={svgWidth}
-                    y2={svgHeight * pct}
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeDasharray="4 4"
-                  />
-                ))}
-
-                {/* Area under curve */}
-                <path d={areaD} fill="url(#chartGradient)" />
-
-                {/* Main line curve */}
-                <path
-                  d={pathD}
-                  fill="none"
-                  stroke="url(#strokeGradient)"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Interactive points */}
-                {pointsFormatted.map((pt, idx) => (
-                  <circle
-                    key={idx}
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={hoveredPoint?.index === idx ? '6' : '3.5'}
-                    fill="#fff"
-                    stroke="#2563EB"
-                    strokeWidth="2.5"
-                    className="transition-all cursor-pointer hover:scale-150"
-                    onMouseEnter={() => setHoveredPoint({ index: idx, val: pt.val })}
-                    onMouseLeave={() => setHoveredPoint(null)}
-                  />
-                ))}
-              </svg>
-
-              {/* Hover Value Badge */}
-              {hoveredPoint && (
-                <div
-                  className="absolute pointer-events-none px-2.5 py-1 rounded-lg bg-black text-white text-[11px] font-mono font-bold shadow-lg border border-neutral-700 -translate-x-1/2"
-                  style={{
-                    left: `${(pointsFormatted[hoveredPoint.index].x / svgWidth) * 100}%`,
-                    top: `${(pointsFormatted[hoveredPoint.index].y / svgHeight) * 100 - 15}%`,
-                  }}
-                >
-                  ${(hoveredPoint.val * 0.000001).toFixed(6)}
-                </div>
-              )}
+            {/* shadcn UI LineChart Component */}
+            <div className="w-full pt-1">
+              <LineChart
+                data={lineChartData}
+                height={240}
+                strokeColor="#2563EB"
+                fillGradient={true}
+                showGridLines={true}
+                showDots={true}
+                className="w-full"
+              />
             </div>
 
             {/* Bottom Chart Metrics Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-neutral-800 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-[var(--surface-strong)] text-xs">
               <div>
-                <span className="text-[10px] text-neutral-400 uppercase font-semibold">24h Volume</span>
-                <p className="font-bold text-white mt-0.5">$342.8K USDC</p>
+                <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">24h Volume</span>
+                <p className="font-bold text-[var(--ink)] mt-0.5">$342.8K USDC</p>
               </div>
               <div>
-                <span className="text-[10px] text-neutral-400 uppercase font-semibold">Liquidity</span>
-                <p className="font-bold text-white mt-0.5">$1.24M</p>
+                <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Liquidity</span>
+                <p className="font-bold text-[var(--ink)] mt-0.5">$1.24M</p>
               </div>
               <div>
-                <span className="text-[10px] text-neutral-400 uppercase font-semibold">Grid Reveal</span>
-                <p className="font-bold text-white mt-0.5">84 / 100 Cells (1 in 16)</p>
+                <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Grid Reveal</span>
+                <p className="font-bold text-[var(--ink)] mt-0.5">84 / 100 Cells (1 in 16)</p>
               </div>
               <div>
-                <span className="text-[10px] text-neutral-400 uppercase font-semibold">Contract Standard</span>
-                <p className="font-bold text-[#60A5FA] mt-0.5">Arc ERC-721 + StrykGrid</p>
+                <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Contract Standard</span>
+                <p className="font-bold text-[#2563EB] dark:text-[#60A5FA] mt-0.5">Arc ERC-721 + StrykGrid</p>
               </div>
             </div>
           </div>
 
-          {/* ── Prominent "Buy Cointag" Button Section ── */}
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0c0d12] text-white p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-neutral-900 shadow-sm">
+          {/* ── Prominent "Buy Cointag" Button Section (NO bg) ── */}
+          <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-0">
             <div className="flex flex-col gap-0.5 text-center sm:text-left">
-              <span className="text-base sm:text-lg font-bold text-white">
+              <span className="text-base sm:text-lg font-bold text-[var(--ink)]">
                 Enter the Live Coordinate Hunt
               </span>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-[var(--muted)]">
                 Purchase 1 Cointag to receive the unique room access code and uncover secret coordinate pairs.
               </p>
             </div>
