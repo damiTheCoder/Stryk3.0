@@ -90,12 +90,12 @@ function AppShell({
 }) {
   return (
     <div
-      className="min-h-screen bg-[var(--bg)] font-sans text-[var(--ink)] p-0 lg:p-4 antialiased selection:bg-gray-200 transition-colors duration-200"
+      className="min-h-screen bg-[var(--bg)] font-sans text-[var(--ink)] p-0 lg:p-3 antialiased selection:bg-gray-200 transition-colors duration-200"
       data-theme={isLightTheme ? 'light' : 'dark'}
     >
       {/* ── Mobile topbar (flush to top/left/right, no border radius, bg matches page bg) ── */}
-      <header className="lg:hidden sticky top-0 z-20 flex items-center justify-between m-0 bg-[var(--bg)] px-4 py-3 rounded-none transition-colors duration-200">
-        <div className="flex items-center gap-2.5">
+      <header className="lg:hidden sticky top-0 z-20 flex items-center justify-between m-0 bg-[var(--bg)] px-3 py-2.5 rounded-none transition-colors duration-200">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-1.5 rounded-xl text-[var(--ink)] hover:bg-[var(--surface)] transition-colors"
@@ -149,15 +149,15 @@ function AppShell({
       )}
 
       {/* ── Desktop 3-Column Single-Row Grid ── */}
-      <div className="p-3 lg:p-0 lg:grid lg:grid-cols-[280px_1fr_auto] gap-4 items-start max-w-[1600px] mx-auto">
+      <div className="p-2 sm:p-2.5 lg:p-0 lg:grid lg:grid-cols-[260px_1fr_auto] gap-2.5 sm:gap-3 lg:gap-3.5 items-start max-w-[1600px] mx-auto">
 
         {/* ── COLUMN 1: SIDEBAR (LEFT) ── */}
         <aside
           className={[
-            'bg-[var(--surface)] rounded-none lg:rounded-2xl p-3.5 flex flex-col',
+            'bg-[var(--surface)] rounded-none lg:rounded-2xl p-3 flex flex-col',
             'fixed top-0 left-0 h-full z-40 w-64 transition-transform duration-300',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-            'lg:static lg:w-[280px] lg:h-auto lg:z-auto lg:translate-x-0 shrink-0',
+            'lg:static lg:w-[260px] lg:h-auto lg:z-auto lg:translate-x-0 shrink-0',
           ].join(' ')}
         >
           {/* Logo Section */}
@@ -202,7 +202,7 @@ function AppShell({
         </aside>
 
         {/* ── COLUMN 2: MAIN CONTENT AREA (CENTER) ── */}
-        <main className="flex-1 min-w-0 flex flex-col gap-4">
+        <main className="flex-1 min-w-0 flex flex-col gap-2.5 sm:gap-3">
           {/* Grid hunt deep-link — shown over any tab when a grid is selected */}
           {selectedGridId !== null ? (
             <GridHunt gridId={selectedGridId} onBack={() => navigate('marketplace')} />

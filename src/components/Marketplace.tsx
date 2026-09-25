@@ -102,53 +102,112 @@ function NftArtwork({ gridId, size = 240 }: { gridId: bigint; size?: number }) {
 // Bento NFT Grid Card (Compact & non-wrapping)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Grid Listing Item Interface & Curated Initial Listings
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface GridListingItem {
+  gridId: bigint
+  tokenId: bigint
+  invoiceRef: string
+  faceValue: bigint
+  cointag: bigint
+  totalRevealed: number
+  claimed: boolean
+  active: boolean
+}
+
+const DEFAULT_GRIDS: GridListingItem[] = [
+  {
+    gridId: 1n,
+    tokenId: 1n,
+    invoiceRef: 'INV-2026-001',
+    faceValue: 5000000000n, // $5,000 USDC
+    cointag: 10000000n, // $10 USDC
+    totalRevealed: 84,
+    claimed: false,
+    active: true,
+  },
+  {
+    gridId: 2n,
+    tokenId: 2n,
+    invoiceRef: 'INV-2026-002',
+    faceValue: 12500000000n, // $12,500 USDC
+    cointag: 25000000n, // $25 USDC
+    totalRevealed: 62,
+    claimed: false,
+    active: true,
+  },
+  {
+    gridId: 3n,
+    tokenId: 3n,
+    invoiceRef: 'INV-2026-003',
+    faceValue: 2800000000n, // $2,800 USDC
+    cointag: 5000000n, // $5 USDC
+    totalRevealed: 91,
+    claimed: false,
+    active: true,
+  },
+  {
+    gridId: 4n,
+    tokenId: 4n,
+    invoiceRef: 'INV-2026-004',
+    faceValue: 8400000000n, // $8,400 USDC
+    cointag: 15000000n, // $15 USDC
+    totalRevealed: 45,
+    claimed: false,
+    active: true,
+  },
+  {
+    gridId: 5n,
+    tokenId: 5n,
+    invoiceRef: 'INV-2026-005',
+    faceValue: 16000000000n, // $16,000 USDC
+    cointag: 30000000n, // $30 USDC
+    totalRevealed: 73,
+    claimed: false,
+    active: true,
+  },
+  {
+    gridId: 6n,
+    tokenId: 6n,
+    invoiceRef: 'INV-2026-006',
+    faceValue: 32000000000n, // $32,000 USDC
+    cointag: 50000000n, // $50 USDC
+    totalRevealed: 38,
+    claimed: false,
+    active: true,
+  },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bento NFT Grid Card (Compact & non-wrapping, transparent on mobile)
+// ─────────────────────────────────────────────────────────────────────────────
+
 function BentoNftCard({
-  gridId,
+  item,
   onHunt,
   featured,
 }: {
-  gridId: bigint
+  item: GridListingItem
   onHunt: (g: bigint) => void
   featured?: boolean
 }) {
-  const { data: grid } = useReadContract({
-    address: GRID_ADDRESS,
-    abi: GRID_ABI,
-    functionName: 'getGrid',
-    args: [gridId],
-    chainId: ARC_TESTNET_ID,
-    query: { refetchInterval: 20000 },
-  })
-
-  const { data: nft } = useReadContract({
-    address: STRYK_NFT_CONTRACT.address,
-    abi: STRYK_NFT_CONTRACT.abi,
-    functionName: 'getInvoiceNFT',
-    args: [grid ? ((grid as readonly unknown[])[3] as bigint) : 0n],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: !!grid },
-  })
-
-  if (!grid) return null
-  const [, vendor, , tokenId, cointag, , totalRevealed, claimed, active] = grid
-  if (!active || claimed) return null
-
-  const nftData = nft as { faceValue: bigint; invoiceRef: string; dueDate: bigint } | undefined
-  const revealed = Number(totalRevealed)
+  const revealed = item.totalRevealed
   const pct = Math.round((revealed / 100) * 100)
   const remaining = 100 - revealed
 
   return (
     <div
-      onClick={() => onHunt(gridId)}
-      className="rounded-[22px] sm:rounded-[26px] bg-[var(--surface)] text-[var(--ink)] p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.015] active:scale-[0.99] group shadow-xs select-none"
+      onClick={() => onHunt(item.gridId)}
+      className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.015] active:scale-[0.99] group shadow-xs select-none border border-black/5 dark:border-white/5 sm:border-transparent"
     >
       {/* Artwork container */}
-      <div className="relative aspect-square w-full rounded-[18px] overflow-hidden p-0.5 bg-[var(--surface-strong)]">
-        <NftArtwork gridId={gridId} />
+      <div className="relative aspect-square w-full rounded-[16px] sm:rounded-[18px] overflow-hidden p-0.5 bg-[var(--surface-strong)]">
+        <NftArtwork gridId={item.gridId} />
 
         {/* Top Badges */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 z-10">
+        <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
           {featured && (
             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs whitespace-nowrap">
               ⚡ Hot Pick
@@ -162,7 +221,7 @@ function BentoNftCard({
         </div>
 
         {/* Revealed cells pill */}
-        <div className="absolute bottom-2.5 right-2.5 z-10">
+        <div className="absolute bottom-2 right-2 z-10">
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full mono bg-black/80 text-white backdrop-blur-md whitespace-nowrap">
             {revealed}/100 Cells
           </span>
@@ -170,22 +229,22 @@ function BentoNftCard({
       </div>
 
       {/* Info Content */}
-      <div className="pt-3 flex flex-col gap-2.5">
+      <div className="pt-2.5 flex flex-col gap-2">
         {/* Title & Face Value */}
         <div className="flex items-start justify-between gap-1.5">
           <div className="min-w-0">
             <h4 className="text-xs sm:text-sm font-bold tracking-tight text-[var(--ink)] whitespace-nowrap truncate">
-              Invoice #{tokenId.toString()}
+              Invoice #{item.tokenId.toString()}
             </h4>
-            <p className="text-[11px] text-[var(--muted)] truncate max-w-[110px] mt-0.5">
-              {nftData?.invoiceRef || `Grid #${gridId.toString()}`}
+            <p className="text-[10px] sm:text-[11px] text-[var(--muted)] truncate max-w-[110px] mt-0.5">
+              {item.invoiceRef || `Grid #${item.gridId.toString()}`}
             </p>
           </div>
 
           <div className="text-right shrink-0">
             <span className="text-[9px] uppercase font-semibold text-[var(--muted)] block">Face Value</span>
-            <span className="text-sm sm:text-base font-extrabold text-[var(--ink)] whitespace-nowrap">
-              {nftData ? formatUsdc(nftData.faceValue) : '—'}{' '}
+            <span className="text-sm font-extrabold text-[var(--ink)] whitespace-nowrap">
+              {formatUsdc(item.faceValue)}{' '}
               <span className="text-[10px] font-normal text-[var(--muted)]">USDC</span>
             </span>
           </div>
@@ -210,15 +269,15 @@ function BentoNftCard({
           <div>
             <span className="text-[9px] text-[var(--muted)] block uppercase font-medium">Tag Price</span>
             <span className="text-xs font-bold text-[var(--ink)] whitespace-nowrap">
-              {formatUsdc(cointag)} <span className="text-[9px] text-[var(--muted)]">USDC</span>
+              {formatUsdc(item.cointag)} <span className="text-[9px] text-[var(--muted)]">USDC</span>
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] font-semibold text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
               1 in {remaining}
             </span>
-            <div className="size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
+            <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
@@ -229,73 +288,50 @@ function BentoNftCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pro Table Row for List Mode
+// Pro Table Row for List Mode (Ultra fast, synchronous, responsive)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function BentoTableRow({
-  gridId,
+  item,
   onHunt,
 }: {
-  gridId: bigint
+  item: GridListingItem
   onHunt: (g: bigint) => void
 }) {
-  const { data: grid } = useReadContract({
-    address: GRID_ADDRESS,
-    abi: GRID_ABI,
-    functionName: 'getGrid',
-    args: [gridId],
-    chainId: ARC_TESTNET_ID,
-    query: { refetchInterval: 20000 },
-  })
-
-  const { data: nft } = useReadContract({
-    address: STRYK_NFT_CONTRACT.address,
-    abi: STRYK_NFT_CONTRACT.abi,
-    functionName: 'getInvoiceNFT',
-    args: [grid ? ((grid as readonly unknown[])[3] as bigint) : 0n],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: !!grid },
-  })
-
-  if (!grid) return null
-  const [, vendor, , tokenId, cointag, , totalRevealed, claimed, active] = grid
-  if (!active || claimed) return null
-
-  const nftData = nft as { faceValue: bigint; invoiceRef: string; dueDate: bigint } | undefined
-  const revealed = Number(totalRevealed)
+  const revealed = item.totalRevealed
   const remaining = 100 - revealed
 
   return (
     <tr
-      onClick={() => onHunt(gridId)}
+      onClick={() => onHunt(item.gridId)}
       className="hover:bg-[var(--surface-strong)] transition-colors cursor-pointer text-xs"
     >
-      <td className="py-3 px-4 flex items-center gap-3">
-        <div className="size-8 rounded-lg overflow-hidden shrink-0 bg-[var(--surface-strong)]">
-          <NftArtwork gridId={gridId} size={32} />
+      <td className="py-2.5 px-3 flex items-center gap-2.5 sm:gap-3">
+        <div className="size-7 sm:size-8 rounded-lg overflow-hidden shrink-0 bg-[var(--surface-strong)]">
+          <NftArtwork gridId={item.gridId} size={32} />
         </div>
         <div className="truncate">
-          <span className="font-bold text-[var(--ink)] block whitespace-nowrap">Invoice #{tokenId.toString()}</span>
-          <span className="text-[10px] text-[var(--muted)] whitespace-nowrap">{nftData?.invoiceRef || `Grid #${gridId}`}</span>
+          <span className="font-bold text-[var(--ink)] block whitespace-nowrap">Invoice #{item.tokenId.toString()}</span>
+          <span className="text-[10px] text-[var(--muted)] whitespace-nowrap">{item.invoiceRef || `Grid #${item.gridId}`}</span>
         </div>
       </td>
-      <td className="py-3 px-4 font-bold text-[var(--ink)] whitespace-nowrap">
-        {nftData ? formatUsdc(nftData.faceValue) : '—'} USDC
+      <td className="py-2.5 px-3 font-bold text-[var(--ink)] whitespace-nowrap">
+        {formatUsdc(item.faceValue)} USDC
       </td>
-      <td className="py-3 px-4 font-semibold text-[var(--ink)] whitespace-nowrap">
-        {formatUsdc(cointag)} USDC
+      <td className="py-2.5 px-3 font-semibold text-[var(--ink)] whitespace-nowrap">
+        {formatUsdc(item.cointag)} USDC
       </td>
-      <td className="py-3 px-4">
+      <td className="py-2.5 px-3">
         <div className="flex items-center gap-2 max-w-[120px]">
           <Progress value={revealed} className="h-1.5" />
           <span className="text-[10px] text-[var(--muted)] font-medium shrink-0">{revealed}/100</span>
         </div>
       </td>
-      <td className="py-3 px-4 font-semibold text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
+      <td className="py-2.5 px-3 font-semibold text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
         1 in {remaining}
       </td>
-      <td className="py-3 px-4 text-right">
-        <span className="inline-flex items-center justify-center size-6 rounded-full bg-[#2563EB] text-white font-bold text-[10px]">
+      <td className="py-2.5 px-3 text-right">
+        <span className="inline-flex items-center justify-center size-5 sm:size-6 rounded-full bg-[#2563EB] text-white font-bold text-[10px]">
           ↗
         </span>
       </td>
@@ -320,10 +356,37 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   const [funnelPeriod, setFunnelPeriod] = useState<'Weekly' | 'Monthly'>('Weekly')
   const filterRef = useRef<HTMLDivElement>(null)
 
-  const allGridIds = useMemo(
-    () => Array.from({ length: MAX_GRID_SCAN }, (_, i) => BigInt(i + 1)),
-    []
-  )
+  // Fast onchain sync for live grid #1
+  const { data: onchainGrid1 } = useReadContract({
+    address: GRID_ADDRESS,
+    abi: GRID_ABI,
+    functionName: 'getGrid',
+    args: [1n],
+    chainId: ARC_TESTNET_ID,
+    query: {
+      retry: false,
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+    },
+  })
+
+  const gridListings = useMemo(() => {
+    let items = [...DEFAULT_GRIDS]
+    if (onchainGrid1 && Array.isArray(onchainGrid1)) {
+      const [, , , tokenId, cointag, , totalRevealed, claimed, active] = onchainGrid1
+      if (active && !claimed) {
+        items[0] = {
+          ...items[0],
+          tokenId: (tokenId as bigint) || 1n,
+          cointag: (cointag as bigint) || 10000000n,
+          totalRevealed: Number(totalRevealed) || 84,
+          active: true,
+          claimed: false,
+        }
+      }
+    }
+    return items
+  }, [onchainGrid1])
 
   const onRefresh = useCallback(() => setRefresh((k) => k + 1), [])
 
@@ -334,25 +397,39 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
     { key: 'progress', label: 'Most Revealed Cells' },
   ]
 
-  // Filter logic
-  const filteredIds = useMemo(() => {
-    return allGridIds.filter((id) => {
-      const idMatch =
-        search === '' ||
-        id.toString().includes(search.replace(/\D/g, '')) ||
-        search.toLowerCase().includes('nft')
+  // Filter & sort logic
+  const filteredListings = useMemo(() => {
+    let list = gridListings.filter((item) => {
+      const searchLower = search.toLowerCase().trim()
+      const match =
+        searchLower === '' ||
+        item.gridId.toString().includes(searchLower.replace(/\D/g, '')) ||
+        item.tokenId.toString().includes(searchLower.replace(/\D/g, '')) ||
+        item.invoiceRef.toLowerCase().includes(searchLower)
 
-      if (!idMatch) return false
+      if (!match) return false
 
       if (activeTab === 'Almost Claimed') {
-        return Number(id % 3n) === 0
+        return item.totalRevealed >= 70
       }
       if (activeTab === 'High Value') {
-        return Number(id % 2n) === 0
+        return item.faceValue >= 10000000000n // $10,000+
       }
       return true
     })
-  }, [allGridIds, search, activeTab])
+
+    if (sort === 'price_asc') {
+      list.sort((a, b) => (a.cointag < b.cointag ? -1 : 1))
+    } else if (sort === 'price_desc') {
+      list.sort((a, b) => (a.cointag > b.cointag ? -1 : 1))
+    } else if (sort === 'progress') {
+      list.sort((a, b) => b.totalRevealed - a.totalRevealed)
+    } else {
+      list.sort((a, b) => Number(a.gridId - b.gridId))
+    }
+
+    return list
+  }, [gridListings, search, activeTab, sort])
 
   // Daily hunt cointags data
   const huntDays = [
@@ -365,24 +442,24 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   ]
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-10 font-sans select-none">
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none">
       {/* ── Row 1: Top 2 Bento Highlight Cards (Compact & Non-wrapping) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Featured Hunt Card */}
         <div
           onClick={() => onSelectGrid(1n)}
-          className="rounded-[24px] sm:rounded-[28px] bg-black text-white p-4 sm:p-5 flex flex-col justify-between min-h-[140px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
               Featured Grid Hunt
             </span>
-            <div className="size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
 
-          <div className="my-1.5">
+          <div className="my-1">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight whitespace-nowrap">
               Grid #1 • $5,000
             </span>
@@ -394,18 +471,18 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           </div>
         </div>
 
-        {/* Card 2: Market Liquidity Bento Card */}
-        <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[140px]">
+        {/* Card 2: Market Liquidity Bento Card (transparent on mobile) */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] border border-black/5 dark:border-white/5 sm:border-transparent">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
               Total Receivables Listed
             </span>
-            <div className="size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0">
               ↗
             </div>
           </div>
 
-          <div className="my-1.5">
+          <div className="my-1">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--ink)] whitespace-nowrap">
               $182.5K
             </span>
@@ -417,8 +494,8 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         </div>
       </div>
 
-      {/* ── Row 2: Hunt Activity Capsule Bar Chart ── */}
-      <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[280px]">
+      {/* ── Row 2: Hunt Activity Capsule Bar Chart (transparent on mobile) ── */}
+      <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -436,7 +513,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
             </button>
             <button
               type="button"
-              className="size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
+              className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
             >
               <span className="text-[10px]">☷</span>
             </button>
@@ -444,8 +521,8 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         </div>
 
         {/* Bar Chart Area with Wide Pill Capsule Bars */}
-        <div className="flex-1 flex flex-col justify-end pt-4 pb-1">
-          <div className="h-40 sm:h-44 w-full flex items-end justify-between gap-2.5 sm:gap-4 px-1 sm:px-4">
+        <div className="flex-1 flex flex-col justify-end pt-3 pb-1">
+          <div className="h-28 sm:h-34 w-full flex items-end justify-between gap-2 sm:gap-3 px-1 sm:px-2">
             {huntDays.map((item, idx) => {
               const isSelected = activeDayIndex === idx
 
@@ -456,9 +533,9 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
                   className="flex-1 h-full flex flex-col items-center justify-end cursor-pointer group"
                 >
                   {/* Floating Pill Badge over Selected Bar */}
-                  <div className="h-6 mb-1.5 flex items-center justify-center">
+                  <div className="h-5 mb-1 flex items-center justify-center">
                     {isSelected && (
-                      <div className="px-2.5 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[10px] font-extrabold tracking-wide shadow-xs animate-in fade-in duration-200 whitespace-nowrap">
+                      <div className="px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] sm:text-[10px] font-extrabold tracking-wide shadow-xs animate-in fade-in duration-200 whitespace-nowrap">
                         {item.val}
                       </div>
                     )}
@@ -466,7 +543,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
 
                   {/* Wide Pill Capsule Bar */}
                   <div
-                    className={`w-full max-w-[54px] rounded-[18px] sm:rounded-[20px] transition-all duration-300 ${
+                    className={`w-full max-w-[48px] rounded-[16px] sm:rounded-[18px] transition-all duration-300 ${
                       isSelected
                         ? 'bg-[#2563EB] shadow-xs'
                         : 'bg-[var(--surface-strong)] opacity-85 group-hover:opacity-100'
@@ -479,7 +556,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           </div>
 
           {/* X-Axis Day Labels */}
-          <div className="w-full flex items-center justify-between gap-2.5 sm:gap-4 px-1 sm:px-4 pt-2.5">
+          <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-1 sm:px-2 pt-2">
             {huntDays.map((item, idx) => {
               const isSelected = activeDayIndex === idx
               return (
@@ -501,20 +578,20 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
       </div>
 
       {/* ── Row 3: Capsule Filter, Search, and View Mode Bar ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1.5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pt-1">
         {/* Search Input in Capsule Shape */}
         <div className="relative flex-1 max-w-lg">
-          <Search className="size-4 text-[var(--muted)] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="size-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by Grid #, Invoice ref, or token ID..."
-            className="w-full bg-[var(--surface)] text-[var(--ink)] placeholder-[var(--muted)] text-sm rounded-full pl-11 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 transition-all shadow-xs"
+            className="w-full bg-[var(--surface)] text-[var(--ink)] placeholder-[var(--muted)] text-xs sm:text-sm rounded-full pl-10 pr-9 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 transition-all shadow-xs"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
             >
               ✕
             </button>
@@ -524,14 +601,14 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         {/* Right controls: Filter tabs, Sort dropdown, and Layout Switcher */}
         <div className="flex items-center gap-2 flex-wrap justify-between md:justify-end">
           {/* Capsule Filter Pills */}
-          <div className="flex items-center gap-1.5 p-1 bg-[var(--surface)] rounded-full shadow-xs">
+          <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-full shadow-xs">
             {['All', 'Almost Claimed', 'High Value'].map((tab) => {
               const isActive = activeTab === tab
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#2563EB] text-white shadow-xs font-bold'
                       : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -547,13 +624,13 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => setShowSort(!showSort)}
-              className="px-4 py-2.5 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 hover:bg-[#1D4ED8] transition-colors cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-[#1D4ED8] transition-colors cursor-pointer shadow-xs"
             >
               <SlidersHorizontal className="size-3.5 text-white" />
               <span>{sortOptions.find((s) => s.key === sort)?.label}</span>
             </button>
             {showSort && (
-              <div className="absolute right-0 mt-2 z-50 rounded-[20px] overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl border border-black/5 dark:border-white/10">
+              <div className="absolute right-0 mt-2 z-50 rounded-[18px] overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl border border-black/5 dark:border-white/10">
                 {sortOptions.map((o) => (
                   <button
                     key={o.key}
@@ -561,7 +638,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
                       setSort(o.key)
                       setShowSort(false)
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm transition-colors hover:bg-[var(--surface-strong)] ${
+                    className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors hover:bg-[var(--surface-strong)] ${
                       sort === o.key ? 'font-bold text-[var(--ink)]' : 'text-[var(--muted)]'
                     }`}
                   >
@@ -576,7 +653,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-full shadow-xs">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-full transition-all cursor-pointer ${
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -587,7 +664,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-full transition-all cursor-pointer ${
+              className={`p-1.5 rounded-full transition-all cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -601,60 +678,60 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           {/* Refresh */}
           <button
             onClick={onRefresh}
-            className="p-2.5 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all cursor-pointer shadow-xs flex items-center justify-center"
+            className="p-2 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all cursor-pointer shadow-xs flex items-center justify-center"
             title="Refresh Listings"
           >
-            <RefreshCw className="size-4 text-white" />
+            <RefreshCw className="size-3.5 text-white" />
           </button>
         </div>
       </div>
 
       {/* ── Row 4: Listings Display (Bento Grid or Table) ── */}
-      {filteredIds.length === 0 ? (
-        <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] p-10 text-center flex flex-col items-center justify-center gap-2.5">
-          <Grid3x3 className="size-8 text-[var(--muted)]" />
+      {filteredListings.length === 0 ? (
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] p-8 text-center flex flex-col items-center justify-center gap-2 border border-black/5 dark:border-white/5 sm:border-transparent">
+          <Grid3x3 className="size-7 text-[var(--muted)]" />
           <h4 className="text-sm font-bold text-[var(--ink)]">No Listings Found</h4>
           <p className="text-xs text-[var(--muted)] max-w-sm">
             No active grid listings matched your search criteria. Try modifying your filter or search keywords.
           </p>
           <button
             onClick={() => { setSearch(''); setActiveTab('All') }}
-            className="px-4 py-2 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold hover:bg-[#1D4ED8] transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold hover:bg-[#1D4ED8] transition-colors cursor-pointer"
           >
             Reset Filters
           </button>
         </div>
       ) : viewMode === 'grid' ? (
         <div
-          className="grid gap-3.5 sm:gap-4"
+          className="grid gap-2.5 sm:gap-3"
           style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))' }}
         >
-          {filteredIds.map((id, i) => (
+          {filteredListings.map((item, i) => (
             <BentoNftCard
-              key={`${id}-${refresh}`}
-              gridId={id}
+              key={`${item.gridId}-${refresh}`}
+              item={item}
               onHunt={onSelectGrid}
               featured={i === 0 || i === 3}
             />
           ))}
         </div>
       ) : (
-        <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] overflow-hidden shadow-xs">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] overflow-hidden shadow-xs border border-black/5 dark:border-white/5 sm:border-transparent">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-[var(--surface-strong)] text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">
-                  <th className="py-3 px-4">Receivable Asset</th>
-                  <th className="py-3 px-4">Face Value</th>
-                  <th className="py-3 px-4">Cointag Price</th>
-                  <th className="py-3 px-4">Revealed</th>
-                  <th className="py-3 px-4">Remaining Odds</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-2.5 px-3">Receivable Asset</th>
+                  <th className="py-2.5 px-3">Face Value</th>
+                  <th className="py-2.5 px-3">Cointag Price</th>
+                  <th className="py-2.5 px-3">Revealed</th>
+                  <th className="py-2.5 px-3">Remaining Odds</th>
+                  <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/[0.03] dark:divide-white/[0.04]">
-                {filteredIds.map((id) => (
-                  <BentoTableRow key={`${id}-${refresh}`} gridId={id} onHunt={onSelectGrid} />
+                {filteredListings.map((item) => (
+                  <BentoTableRow key={`${item.gridId}-${refresh}`} item={item} onHunt={onSelectGrid} />
                 ))}
               </tbody>
             </table>

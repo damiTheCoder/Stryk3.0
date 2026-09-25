@@ -71,24 +71,24 @@ export default function Dashboard({ onNavigate }: Props) {
   ]
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-10 font-sans select-none">
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none">
       {/* ── Top Row: 3 Bento KPI Cards (Compact & Non-wrapping) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Hero Card */}
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[24px] sm:rounded-[28px] bg-black text-white p-4 sm:p-5 flex flex-col justify-between min-h-[140px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
               Available to payout
             </span>
-            <div className="size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
 
-          <div className="my-1.5">
+          <div className="my-1">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight whitespace-nowrap">
               {vendorIds.length > 0 ? `$${(vendorIds.length * 3.2).toFixed(1)}K` : '$16.4K'}
             </span>
@@ -99,21 +99,21 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 2: Light Surface Card */}
+        {/* Card 2: Light Surface Card (transparent on mobile) */}
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[140px] cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
               Total invoiced volume
             </span>
-            <div className="size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
 
-          <div className="my-1.5">
+          <div className="my-1">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--ink)] whitespace-nowrap">
               {vendorIds.length > 0 ? `$${(vendorIds.length * 6.4).toFixed(1)}K` : '$34.5K'}
             </span>
@@ -124,21 +124,21 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 3: Light Surface Card */}
+        {/* Card 3: Light Surface Card (transparent on mobile) */}
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[140px] cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
               Total receivables
             </span>
-            <div className="size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
 
-          <div className="my-1.5">
+          <div className="my-1">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--ink)] whitespace-nowrap">
               {vendorIds.length + clientIds.length > 0 ? (vendorIds.length + clientIds.length) : '400'}
             </span>
@@ -151,9 +151,9 @@ export default function Dashboard({ onNavigate }: Props) {
       </div>
 
       {/* ── Bottom Row: Invoicing Volume Bar Chart & Settlement Channels Matrix ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 sm:gap-4">
-        {/* Card 4: Invoicing Volume Bar Chart */}
-        <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[290px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3">
+        {/* Card 4: Invoicing Volume Bar Chart (transparent on mobile) */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -171,7 +171,7 @@ export default function Dashboard({ onNavigate }: Props) {
               </button>
               <button
                 type="button"
-                className="size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
+                className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
               >
                 <span className="text-[10px]">☷</span>
               </button>
@@ -179,8 +179,8 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
 
           {/* Bar Chart Area with Wide Pill Capsule Bars */}
-          <div className="flex-1 flex flex-col justify-end pt-4 pb-1">
-            <div className="h-40 sm:h-44 w-full flex items-end justify-between gap-2.5 sm:gap-3 px-1 sm:px-2">
+          <div className="flex-1 flex flex-col justify-end pt-3 pb-1">
+            <div className="h-28 sm:h-34 w-full flex items-end justify-between gap-2 sm:gap-3 px-1 sm:px-2">
               {funnelDays.map((item, idx) => {
                 const isSelected = activeDayIndex === idx
 
@@ -191,9 +191,9 @@ export default function Dashboard({ onNavigate }: Props) {
                     className="flex-1 h-full flex flex-col items-center justify-end cursor-pointer group"
                   >
                     {/* Floating Pill Badge over Peak/Selected Bar */}
-                    <div className="h-6 mb-1.5 flex items-center justify-center">
+                    <div className="h-5 mb-1 flex items-center justify-center">
                       {isSelected && (
-                        <div className="px-2.5 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[10px] font-extrabold tracking-wide shadow-xs animate-in fade-in duration-200">
+                        <div className="px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] sm:text-[10px] font-extrabold tracking-wide shadow-xs animate-in fade-in duration-200">
                           {item.val}
                         </div>
                       )}
@@ -201,7 +201,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
                     {/* Wide Pill Capsule Bar */}
                     <div
-                      className={`w-full max-w-[46px] rounded-[18px] sm:rounded-[20px] transition-all duration-300 ${
+                      className={`w-full max-w-[44px] rounded-[16px] sm:rounded-[18px] transition-all duration-300 ${
                         isSelected
                           ? 'bg-[#2563EB] shadow-xs'
                           : 'bg-[var(--surface-strong)] opacity-85 group-hover:opacity-100'
@@ -214,7 +214,7 @@ export default function Dashboard({ onNavigate }: Props) {
             </div>
 
             {/* X-Axis Day Labels */}
-            <div className="w-full flex items-center justify-between gap-2.5 sm:gap-3 px-1 sm:px-2 pt-2.5">
+            <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-1 sm:px-2 pt-2">
               {funnelDays.map((item, idx) => {
                 const isSelected = activeDayIndex === idx
                 return (
@@ -235,8 +235,8 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 5: Settlement Channels Activity Matrix */}
-        <div className="rounded-[24px] sm:rounded-[28px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-5 flex flex-col justify-between min-h-[290px]">
+        {/* Card 5: Settlement Channels Activity Matrix (transparent on mobile) */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -254,16 +254,16 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
 
           {/* Matrix Grid */}
-          <div className="flex-1 flex flex-col justify-center space-y-2.5 sm:space-y-3 py-1">
+          <div className="flex-1 flex flex-col justify-center space-y-2 sm:space-y-2.5 py-1">
             {settlementChannels.map(channel => (
-              <div key={channel.name} className="flex items-center gap-2.5 sm:gap-3">
+              <div key={channel.name} className="flex items-center gap-2 sm:gap-2.5">
                 {/* Channel Label */}
-                <div className="w-24 sm:w-28 shrink-0 text-xs font-medium text-[var(--ink)] truncate">
+                <div className="w-22 sm:w-26 shrink-0 text-xs font-medium text-[var(--ink)] truncate">
                   {channel.name}
                 </div>
 
                 {/* 4 Capsule Rounded Tiles */}
-                <div className="flex-1 grid grid-cols-4 gap-2 sm:gap-2.5">
+                <div className="flex-1 grid grid-cols-4 gap-1.5 sm:gap-2">
                   {channel.tiles.map((type, tIdx) => {
                     let tileColor = 'bg-[var(--surface-strong)]'
 
@@ -278,7 +278,7 @@ export default function Dashboard({ onNavigate }: Props) {
                     return (
                       <div
                         key={tIdx}
-                        className={`h-8 sm:h-9 rounded-[12px] sm:rounded-[14px] transition-transform hover:scale-[1.03] cursor-pointer ${tileColor}`}
+                        className={`h-7 sm:h-8 rounded-[10px] sm:rounded-[12px] transition-transform hover:scale-[1.03] cursor-pointer ${tileColor}`}
                       />
                     )
                   })}
@@ -289,15 +289,15 @@ export default function Dashboard({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* ── Quick Workflows Section (Matching Bento Design) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+      {/* ── Quick Workflows Section (transparent on mobile, compact padding) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[22px] sm:rounded-[26px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-4.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Create Invoice</h4>
-            <div className="size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
+            <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
@@ -308,11 +308,11 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[22px] sm:rounded-[26px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-4.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Issued Invoices</h4>
-            <div className="size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
+            <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
@@ -323,11 +323,11 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[22px] sm:rounded-[26px] bg-[var(--surface)] text-[var(--ink)] p-4 sm:p-4.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Grid Hunt Market</h4>
-            <div className="size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
+            <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
               ↗
             </div>
           </div>
