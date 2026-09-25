@@ -8,7 +8,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Glacial Indifference"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Glacial Indifference"', 'Space Grotesk', 'sans-serif'],
       },
     },
   },
