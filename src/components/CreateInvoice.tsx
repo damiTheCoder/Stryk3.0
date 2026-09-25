@@ -134,7 +134,7 @@ export default function CreateInvoice({ onCreated }: Props) {
               onClick={handleCopy}
               className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all"
               style={{
-                background: copied ? 'rgba(26,128,71,0.12)' : 'rgba(18,45,69,0.08)',
+                background: copied ? 'rgba(37,99,235,0.12)' : 'rgba(18,45,69,0.08)',
                 color: copied ? 'var(--success)' : 'var(--accent)',
               }}
             >
@@ -254,8 +254,7 @@ export default function CreateInvoice({ onCreated }: Props) {
       <button
         disabled={!ready && !wrongChain}
         onClick={handleSubmit}
-        className="w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-2"
-        style={{ background: 'var(--accent)' }}
+        className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer bg-[#2563EB] hover:bg-[#1D4ED8]"
       >
         {wrongChain
           ? 'Switch to Arc Testnet'

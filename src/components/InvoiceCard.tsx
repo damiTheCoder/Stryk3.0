@@ -23,7 +23,7 @@ const STATUS_STYLES: Record<number, { bg: string; color: string; icon: React.Rea
     icon: <Clock className="size-3.5" />,
   },
   1: {
-    bg: 'rgba(26, 128, 71, 0.10)',
+    bg: 'rgba(37, 99, 235, 0.10)',
     color: 'var(--success)',
     icon: <CheckCircle2 className="size-3.5" />,
   },
@@ -128,8 +128,7 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
           {invoice.status === 0 && onPay && (
             <button
               onClick={() => onPay(invoice.id)}
-              className="flex-1 rounded-xl py-2 text-xs font-semibold text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: 'var(--accent)' }}
+              className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer"
             >
               Pay Invoice
             </button>
@@ -137,8 +136,7 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
           {invoice.status === 2 && onPay && (
             <button
               onClick={() => onPay(invoice.id)}
-              className="flex-1 rounded-xl py-2 text-xs font-semibold text-white transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: 'var(--accent-hover)' }}
+              className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer"
             >
               Pay (Tokenized)
             </button>
@@ -146,8 +144,7 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
           {isVendor && isOverdue && invoice.status === 0 && onTokenize && (
             <button
               onClick={() => onTokenize(invoice.id)}
-              className="flex-1 rounded-xl py-2 text-xs font-semibold transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: 'rgba(16,97,166,0.1)', color: 'var(--accent-hover)' }}
+              className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer"
             >
               Tokenize
             </button>
@@ -155,8 +152,8 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
           {isVendor && invoice.status === 0 && !isOverdue && onCancel && (
             <button
               onClick={() => onCancel(invoice.id)}
-              className="rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: 'rgba(186,43,76,0.08)', color: 'var(--danger)' }}
+              className="rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+              style={{ background: 'rgba(186,43,76,0.12)', color: 'var(--danger)' }}
             >
               Cancel
             </button>

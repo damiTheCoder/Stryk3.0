@@ -15,7 +15,7 @@ const GRID_ABI     = STRYK_GRID_CONTRACT.abi
 // ── Cell colours ──────────────────────────────────────────────────────────────
 const cellBg = (revealer: string, address?: string, isWinner?: boolean) => {
   if (revealer === '0x0000000000000000000000000000000000000000') return 'rgba(255,255,255,0.04)'
-  if (isWinner) return 'rgba(34,197,94,0.3)'
+  if (isWinner) return 'rgba(37,99,235,0.3)'
   if (address && revealer.toLowerCase() === address.toLowerCase()) return 'rgba(255,255,255,0.18)'
   return 'rgba(255,255,255,0.10)'
 }
@@ -43,8 +43,8 @@ function Cell({
       className="aspect-square rounded-md text-[9px] font-mono transition-all hover:scale-105 active:scale-95 disabled:cursor-default"
       style={{
         background: cellBg(revealer, address, isWinner),
-        border: `1px solid ${isWinner ? 'rgba(34,197,94,0.6)' : unrevealed ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.14)'}`,
-        color: unrevealed ? 'rgba(255,255,255,0.3)' : isWinner ? '#22c55e' : 'rgba(255,255,255,0.6)',
+        border: `1px solid ${isWinner ? 'rgba(37,99,235,0.6)' : unrevealed ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.14)'}`,
+        color: unrevealed ? 'rgba(255,255,255,0.3)' : isWinner ? '#2563EB' : 'rgba(255,255,255,0.6)',
       }}
     >
       {isWinner ? '★' : unrevealed ? index + 1 : '✓'}
@@ -154,7 +154,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </h1>
               {claimed && (
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+                  style={{ background: 'rgba(37,99,235,0.15)', color: '#2563EB' }}>
                   Claimed
                 </span>
               )}
@@ -163,7 +163,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               NFT #{tokenId.toString()} · Vendor {vendor.slice(0, 8)}…{vendor.slice(-6)}
             </p>
             {nftData && (
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+               <p className="text-sm" style={{ color: 'var(--muted)' }}>
                 {nftData.invoiceRef || 'Invoice receivable'} ·{' '}
                 <span style={{ color: 'var(--ink)', fontWeight: 600 }}>
                   {formatUsdc(nftData.faceValue)} USDC
@@ -189,7 +189,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
           </div>
           <div className="rounded-full overflow-hidden h-2" style={{ background: 'rgba(255,255,255,0.07)' }}>
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--accent), #22c55e)' }} />
+              style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--accent), #2563EB)' }} />
           </div>
         </div>
       </div>
@@ -251,8 +251,8 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
             <button
               onClick={() => handleApprove(pendingCell)}
               disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'var(--accent)', color: '#0a0a0a', opacity: loading ? 0.6 : 1 }}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer"
+              style={{ background: '#2563EB', color: '#fff', opacity: loading ? 0.6 : 1 }}
             >
               {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Ticket className="size-3.5" />}
               Approve
@@ -261,8 +261,8 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
             <button
               onClick={handleReveal}
               disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: '#22c55e', color: '#fff', opacity: loading ? 0.6 : 1 }}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer"
+              style={{ background: '#2563EB', color: '#fff', opacity: loading ? 0.6 : 1 }}
             >
               {loading ? <Loader2 className="size-3.5 animate-spin" /> : <ChevronRight className="size-3.5" />}
               Reveal!
@@ -274,10 +274,10 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       {/* Claimed banner */}
       {claimed && (
         <div className="rounded-2xl p-5 flex items-center gap-4"
-          style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
-          <Trophy className="size-7 shrink-0" style={{ color: '#22c55e' }} />
+          style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)' }}>
+          <Trophy className="size-7 shrink-0" style={{ color: '#2563EB' }} />
           <div>
-            <p className="font-semibold" style={{ color: '#22c55e' }}>NFT Claimed!</p>
+            <p className="font-semibold" style={{ color: '#2563EB' }}>NFT Claimed!</p>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
               The winning cell was found. The NFT receivable has been transferred to the winner.
             </p>

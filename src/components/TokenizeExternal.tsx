@@ -140,9 +140,9 @@ export default function TokenizeExternal() {
 
         <div
           className="rounded-2xl p-6 flex flex-col gap-4 text-center"
-          style={{ background: 'rgba(34,197,94,0.06)' }}
+          style={{ background: 'rgba(37,99,235,0.06)' }}
         >
-          <CheckCircle className="size-10 mx-auto" style={{ color: '#22c55e' }} />
+          <CheckCircle className="size-10 mx-auto" style={{ color: '#2563EB' }} />
           <div>
             <p className="display text-xl font-bold" style={{ color: 'var(--ink)' }}>
               NFT #{mintedTokenId ?? '—'} Minted
@@ -232,15 +232,15 @@ export default function TokenizeExternal() {
           <label
             className="flex flex-col items-center justify-center gap-2 rounded-xl py-8 cursor-pointer transition-all"
             style={{
-              border: `2px dashed ${fileDataUrl ? 'rgba(34,197,94,0.40)' : 'rgba(255,255,255,0.08)'}`,
-              background: fileDataUrl ? 'rgba(34,197,94,0.04)' : 'transparent',
+              border: `2px dashed ${fileDataUrl ? 'rgba(37,99,235,0.40)' : 'rgba(255,255,255,0.08)'}`,
+              background: fileDataUrl ? 'rgba(37,99,235,0.04)' : 'transparent',
             }}
           >
             <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={handleFileChange} />
             {fileDataUrl ? (
               <>
-                <CheckCircle className="size-6" style={{ color: '#22c55e' }} />
-                <p className="text-sm font-medium" style={{ color: '#22c55e' }}>{fileName}</p>
+                <CheckCircle className="size-6" style={{ color: '#2563EB' }} />
+                <p className="text-sm font-medium" style={{ color: '#2563EB' }}>{fileName}</p>
                 <p className="text-xs" style={{ color: 'var(--subtle)' }}>Click to replace</p>
               </>
             ) : (
@@ -334,8 +334,7 @@ export default function TokenizeExternal() {
       <button
         disabled={(!ready && !wrongChain) || isLoading}
         onClick={handleSubmit}
-        className="w-full rounded-2xl py-3.5 text-sm font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-2"
-        style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+        className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer bg-[#2563EB] hover:bg-[#1D4ED8]"
       >
         {wrongChain
           ? 'Switch to Arc Testnet'

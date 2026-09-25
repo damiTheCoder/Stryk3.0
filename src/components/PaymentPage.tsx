@@ -142,8 +142,8 @@ export default function PaymentPage() {
           Back to app
         </Link>
         <div className="flex items-center gap-2">
-          <StrykLogo size={20} />
-          <span className="display text-base font-bold tracking-tight" style={{ color: 'var(--ink)' }}>Stryk</span>
+          <StrykLogo size={24} />
+          <span className="display text-base font-bold tracking-tight" style={{ color: 'var(--ink)' }}>Veo</span>
         </div>
         <div className="w-24 flex justify-end">
           <ConnectKitButton
@@ -265,10 +265,10 @@ export default function PaymentPage() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all cursor-pointer"
                       style={{
-                        background: tab === t.id ? 'var(--accent)' : 'transparent',
-                        color: tab === t.id ? '#fff' : 'var(--muted)',
+                        background: tab === t.id ? '#2563EB' : 'transparent',
+                        color: tab === t.id ? '#ffffff' : 'var(--muted)',
                         borderRight: t.id === 'card' ? '1px solid rgba(255,255,255,0.05)' : 'none',
                       }}
                     >
@@ -308,8 +308,8 @@ export default function PaymentPage() {
                       <>
                         <button
                           onClick={() => setMoonpayVisible(true)}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
-                          style={{ background: 'var(--accent)', color: '#fff' }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
+                          style={{ background: '#2563EB', color: '#ffffff' }}
                         >
                           <CreditCard className="size-4" />
                           Pay {formatUsdc(inv.amount)} with Card
@@ -342,15 +342,16 @@ export default function PaymentPage() {
                         <ConnectKitButton
                           customTheme={{
                             '--ck-font-family': "'DM Sans', sans-serif",
-                            '--ck-primary-button-background': '#122d45',
-                            '--ck-primary-button-hover-background': '#1061a6',
+                            '--ck-primary-button-background': '#2563EB',
+                            '--ck-primary-button-hover-background': '#1D4ED8',
+                            '--ck-primary-button-color': '#ffffff',
                           }}
                         />
                       </div>
                     ) : paySuccess ? (
                       <div className="flex flex-col items-center gap-3 py-6 text-center">
-                        <CheckCircle className="size-12" style={{ color: 'var(--success)' }} />
-                        <p className="display text-lg font-bold" style={{ color: 'var(--success)' }}>Payment Sent!</p>
+                        <CheckCircle className="size-12" style={{ color: '#2563EB' }} />
+                        <p className="display text-lg font-bold" style={{ color: '#2563EB' }}>Payment Sent!</p>
                         <p className="text-sm" style={{ color: 'var(--muted)' }}>
                           {formatUsdc(inv.amount)} USDC sent to vendor.
                         </p>
@@ -360,7 +361,7 @@ export default function PaymentPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-xs font-medium"
-                            style={{ color: '#1061a6' }}
+                            style={{ color: '#2563EB' }}
                           >
                             View transaction <ExternalLink className="size-3" />
                           </a>
@@ -370,10 +371,10 @@ export default function PaymentPage() {
                       <button
                         onClick={handleApprove}
                         disabled={approveLoading}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
                         style={{
-                          background: 'var(--accent)',
-                          color: '#fff',
+                          background: '#2563EB',
+                          color: '#ffffff',
                           opacity: approveLoading ? 0.6 : 1,
                         }}
                       >
@@ -385,10 +386,10 @@ export default function PaymentPage() {
                       <button
                         onClick={handlePay}
                         disabled={payLoading}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
                         style={{
-                          background: 'var(--success)',
-                          color: '#fff',
+                          background: '#2563EB',
+                          color: '#ffffff',
                           opacity: payLoading ? 0.6 : 1,
                         }}
                       >

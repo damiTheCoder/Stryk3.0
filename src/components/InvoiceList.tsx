@@ -192,8 +192,7 @@ export default function InvoiceList({ mode }: Props) {
         </div>
         <button
           onClick={handleRefresh}
-          className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.01]"
-          style={{ background: 'var(--surface-muted)', color: 'var(--muted)' }}
+          className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.01] bg-[#2563EB] text-white hover:bg-[#1D4ED8] cursor-pointer"
         >
           <RefreshCw className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh

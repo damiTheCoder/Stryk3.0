@@ -103,8 +103,8 @@ function AppShell({
           >
             <Columns2 className="size-5" />
           </button>
-          <StrykLogo size={20} />
-          <span className="text-lg font-bold tracking-tight text-[var(--ink)]">Stryk</span>
+          <StrykLogo size={24} />
+          <span className="text-lg font-bold tracking-tight text-[var(--ink)]">Veo</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -163,8 +163,8 @@ function AppShell({
           {/* Logo Section */}
           <div className="flex items-center justify-between px-1.5 py-1">
             <div className="flex items-center gap-2.5">
-              <StrykLogo size={22} />
-              <span className="text-xl font-bold tracking-tight text-[var(--ink)]">Stryk</span>
+              <StrykLogo size={26} />
+              <span className="text-xl font-bold tracking-tight text-[var(--ink)]">Veo</span>
             </div>
             <button
               className="lg:hidden p-1 rounded-lg text-[var(--muted)] hover:text-[var(--ink)]"

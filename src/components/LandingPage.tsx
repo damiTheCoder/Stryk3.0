@@ -61,7 +61,7 @@ export default function LandingPage({ onEnter }: Props) {
       <header className="relative z-20 pt-10 sm:pt-14 px-6 text-center flex flex-col items-center">
         {/* Small top label */}
         <p className="text-xs sm:text-sm md:text-base font-semibold tracking-[0.25em] text-white/80 uppercase mb-2">
-          Stryk Protocol
+          Veo Protocol
         </p>
 
         {/* Main Bold Headline (matches 'BRANDING AGENCY' styling) */}
@@ -96,13 +96,13 @@ export default function LandingPage({ onEnter }: Props) {
         <button
           onClick={handleLaunch}
           type="button"
-          className="group relative inline-flex flex-col items-center justify-center px-8 py-4 rounded-2xl bg-white/[0.08] hover:bg-white/[0.16] backdrop-blur-md border border-white/20 hover:border-white/40 shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+          className="group relative inline-flex flex-col items-center justify-center px-8 py-4 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-extrabold shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
         >
-          <span className="flex items-center gap-2 text-xs sm:text-sm font-extrabold tracking-widest uppercase text-white/90 group-hover:text-white transition-colors">
+          <span className="flex items-center gap-2 text-xs sm:text-sm font-extrabold tracking-widest uppercase text-white">
             <span>ENTER APP</span>
             <ArrowUpRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
-          <span className="text-xs sm:text-sm font-extrabold tracking-widest uppercase text-white group-hover:text-sky-300 transition-colors">
+          <span className="text-xs sm:text-sm font-extrabold tracking-widest uppercase text-white/80">
             EXPLORE MARKETPLACE.
           </span>
         </button>

@@ -1,4 +1,4 @@
-# Stryk — Stablecoin Invoicing & Tokenization
+# Veo — Stablecoin Invoicing & Tokenization
 
 > Built with Arc Studio - money-powered apps in minutes
 
