@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { ConnectKitButton } from 'connectkit'
+import {
+  ArrowUpRight,
+  BarChart3,
+  TrendingUp,
+  Wallet,
+  FileText,
+  FilePlus,
+  Layers,
+  Sparkles,
+} from 'lucide-react'
 import { INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 
 function useVendorStats(address?: `0x${string}`) {
@@ -80,11 +90,14 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
-              Available to payout
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Wallet className="size-3.5 text-neutral-300 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
+                Available to payout
+              </span>
+            </div>
             <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
 
@@ -105,11 +118,14 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
-              Total invoiced volume
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <TrendingUp className="size-3.5 text-[var(--muted)] shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
+                Total invoiced volume
+              </span>
+            </div>
             <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
 
@@ -130,11 +146,14 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
-              Total receivables
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Layers className="size-3.5 text-[var(--muted)] shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
+                Total receivables
+              </span>
+            </div>
             <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0 group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
 
@@ -173,7 +192,7 @@ export default function Dashboard({ onNavigate }: Props) {
                 type="button"
                 className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
               >
-                <span className="text-[10px]">☷</span>
+                <BarChart3 className="size-3.5 text-white" />
               </button>
             </div>
           </div>
@@ -296,9 +315,12 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Create Invoice</h4>
+            <div className="flex items-center gap-1.5">
+              <FilePlus className="size-4 text-[#2563EB]" />
+              <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Create Invoice</h4>
+            </div>
             <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3" strokeWidth={2.5} />
             </div>
           </div>
           <p className="text-[11px] text-[var(--muted)] leading-relaxed">
@@ -311,9 +333,12 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Issued Invoices</h4>
+            <div className="flex items-center gap-1.5">
+              <FileText className="size-4 text-[#2563EB]" />
+              <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Issued Invoices</h4>
+            </div>
             <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3" strokeWidth={2.5} />
             </div>
           </div>
           <p className="text-[11px] text-[var(--muted)] leading-relaxed">
@@ -326,9 +351,12 @@ export default function Dashboard({ onNavigate }: Props) {
           className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Grid Hunt Market</h4>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="size-4 text-[#2563EB]" />
+              <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Grid Hunt Market</h4>
+            </div>
             <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3" strokeWidth={2.5} />
             </div>
           </div>
           <p className="text-[11px] text-[var(--muted)] leading-relaxed">

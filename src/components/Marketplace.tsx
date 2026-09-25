@@ -14,6 +14,14 @@ import {
   RefreshCw,
   LayoutGrid,
   List,
+  ArrowUpRight,
+  BarChart3,
+  X,
+  Zap,
+  Flame,
+  Sparkles,
+  Layers,
+  Activity,
 } from 'lucide-react'
 import { STRYK_GRID_CONTRACT, STRYK_NFT_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 import { formatUsdc } from '@/onchain-money'
@@ -208,13 +216,15 @@ function BentoNftCard({
         {/* Top Badges */}
         <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
           {featured && (
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs whitespace-nowrap">
-              ⚡ Hot Pick
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs whitespace-nowrap flex items-center gap-1">
+              <Zap className="size-2.5 text-amber-400 fill-amber-400" />
+              <span>Hot Pick</span>
             </span>
           )}
           {revealed >= 70 && (
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2563EB] text-white shadow-xs whitespace-nowrap">
-              🔥 70%+
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2563EB] text-white shadow-xs whitespace-nowrap flex items-center gap-1">
+              <Flame className="size-2.5 text-orange-300 fill-orange-300" />
+              <span>70%+</span>
             </span>
           )}
         </div>
@@ -277,7 +287,7 @@ function BentoNftCard({
               1 in {remaining}
             </span>
             <div className="size-5 sm:size-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -342,7 +352,7 @@ function BentoTableRow({
       </td>
       <td className="py-2.5 px-3 text-right">
         <span className="inline-flex items-center justify-center size-5 sm:size-6 rounded-full bg-[#2563EB] text-white font-bold text-[10px]">
-          ↗
+          <ArrowUpRight className="size-3" strokeWidth={2.5} />
         </span>
       </td>
     </tr>
@@ -440,11 +450,12 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
+            <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate flex items-center gap-1.5">
+              <Sparkles className="size-3.5 text-neutral-300 shrink-0" />
               Featured Grid Hunt
             </span>
             <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
-              ↗
+              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
 
@@ -463,11 +474,12 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         {/* Card 2: Market Liquidity Bento Card */}
         <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] border-0 shadow-xs">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
+            <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate flex items-center gap-1.5">
+              <Layers className="size-3.5 text-[var(--muted)] shrink-0" />
               Total Receivables Listed
             </span>
             <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0">
-              ↗
+              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
 
@@ -487,9 +499,14 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
       <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <div>
-            <h3 className="text-base sm:text-lg font-bold tracking-tight text-[var(--ink)]">Hunt Activity</h3>
-            <p className="text-[11px] text-[var(--muted)] mt-0.5">Cointags minted per day</p>
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
+              <Activity className="size-4 text-[#2563EB]" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold tracking-tight text-[var(--ink)]">Hunt Activity</h3>
+              <p className="text-[11px] text-[var(--muted)] mt-0.5">Cointags minted per day</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -504,7 +521,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
               type="button"
               className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-xs font-bold text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors cursor-pointer"
             >
-              <span className="text-[10px]">☷</span>
+              <BarChart3 className="size-3.5 text-white" />
             </button>
           </div>
         </div>
@@ -582,7 +599,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
               onClick={() => setSearch('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
             >
-              ✕
+              <X className="size-3.5" />
             </button>
           )}
         </div>
