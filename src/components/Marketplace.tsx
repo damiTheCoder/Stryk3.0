@@ -442,7 +442,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   ]
 
   return (
-    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none">
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none px-2 sm:px-0">
       {/* ── Row 1: Top 2 Bento Highlight Cards (Compact & Non-wrapping) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Featured Hunt Card */}

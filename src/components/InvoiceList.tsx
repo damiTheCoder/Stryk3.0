@@ -182,7 +182,7 @@ export default function InvoiceList({ mode }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-7xl mx-auto pb-6 font-sans px-2 sm:px-0">
       <div className="flex items-center justify-between">
         <div>
           <p className="display text-2xl font-bold" style={{ color: 'var(--ink)' }}>{titleMap[mode]}</p>

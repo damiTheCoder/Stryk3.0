@@ -98,7 +98,7 @@ export default function CreateInvoice({ onCreated }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-7xl mx-auto pb-6 font-sans px-2 sm:px-0">
       <div>
         <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>
           New Invoice
