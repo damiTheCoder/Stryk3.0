@@ -157,7 +157,7 @@ function AppShell({
             'bg-[var(--surface)] rounded-none lg:rounded-2xl p-3 flex flex-col',
             'fixed top-0 left-0 h-full z-40 w-64 transition-transform duration-300',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-            'lg:static lg:w-[260px] lg:h-auto lg:z-auto lg:translate-x-0 shrink-0',
+            'lg:sticky lg:top-3 lg:self-start lg:w-[260px] lg:h-auto lg:max-h-[calc(100vh-1.5rem)] lg:overflow-y-auto lg:z-20 lg:translate-x-0 shrink-0',
           ].join(' ')}
         >
           {/* Logo Section */}
@@ -236,7 +236,7 @@ function AppShell({
         </main>
 
         {/* ── COLUMN 3: TOP RIGHT UTILITY (RIGHT) ── */}
-        <aside aria-label="Utility controls" className="hidden lg:flex justify-self-end bg-[var(--surface)] rounded-2xl p-1.5 items-center gap-2 shrink-0">
+        <aside aria-label="Utility controls" className="hidden lg:flex lg:sticky lg:top-3 lg:self-start justify-self-end bg-[var(--surface)] rounded-2xl p-1.5 items-center gap-2 shrink-0 z-20">
           {/* Item 1: Circular Theme Toggle Icon (half black, half white circle) */}
           <button
             type="button"
