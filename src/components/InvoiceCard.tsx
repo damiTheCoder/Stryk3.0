@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Coins, XCircle, ExternalLink } from 'lucide-react'
+import { CheckCircle2, Clock, Coins, XCircle, ExternalLink, Target } from 'lucide-react'
 import { Amount, usdcDecimalsFor } from '@/onchain-money'
 import { ARC_TESTNET_ID } from '../contractConfig'
 import { buildTxExplorerUrl } from '@/onchain-facts'
@@ -45,6 +45,7 @@ interface Props {
   onPay?: (id: bigint) => void
   onTokenize?: (id: bigint) => void
   onCancel?: (id: bigint) => void
+  onViewAsset?: (id: bigint) => void
   explorerTxHash?: string
 }
 
@@ -52,7 +53,7 @@ function formatAddress(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
-export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokenize, onCancel, explorerTxHash }: Props) {
+export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokenize, onCancel, onViewAsset, explorerTxHash }: Props) {
   const style = STATUS_STYLES[invoice.status] ?? STATUS_STYLES[3]
   const nowSec = BigInt(Math.floor(new Date().getTime() / 1000))
   const isVendor = connectedAddress?.toLowerCase() === invoice.vendor.toLowerCase()
@@ -133,6 +134,15 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
               className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer"
             >
               Pay (Tokenized)
+            </button>
+          )}
+          {invoice.status === 2 && onViewAsset && (
+            <button
+              onClick={() => onViewAsset(invoice.id)}
+              className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] bg-[#10B981] hover:bg-[#059669] cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <Target className="size-3.5" />
+              <span>Hunt Asset Details</span>
             </button>
           )}
           {isVendor && isOverdue && invoice.status === 0 && onTokenize && (

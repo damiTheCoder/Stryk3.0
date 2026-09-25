@@ -212,7 +212,7 @@ function AppShell({
                 <Marketplace onSelectGrid={openGrid} />
               )}
               {tab === 'dashboard' && (
-                <Dashboard onNavigate={(t) => navigate(t as Tab)} />
+                <Dashboard onNavigate={(t) => navigate(t as Tab)} onOpenHunt={openGrid} />
               )}
               {tab === 'create' && (
                 <CreateInvoice
@@ -223,10 +223,10 @@ function AppShell({
                 />
               )}
               {tab === 'vendor' && (
-                <InvoiceList mode="vendor" />
+                <InvoiceList mode="vendor" onOpenHunt={openGrid} />
               )}
               {tab === 'client' && (
-                <InvoiceList mode="client" />
+                <InvoiceList mode="client" onOpenHunt={openGrid} />
               )}
               {tab === 'tokenize' && (
                 <TokenizeExternal />

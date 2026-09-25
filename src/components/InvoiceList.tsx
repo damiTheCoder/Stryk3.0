@@ -12,6 +12,7 @@ const usdcFact = getUsdc(ARC_TESTNET_ID)!
 
 interface Props {
   mode: 'vendor' | 'client' | 'all'
+  onOpenHunt?: (id: bigint) => void
 }
 
 function useInvoiceIds(mode: 'vendor' | 'client' | 'all', address?: `0x${string}`) {
@@ -41,7 +42,17 @@ function useInvoiceIds(mode: 'vendor' | 'client' | 'all', address?: `0x${string}
   return { ids: combined, isLoading: vendorResult.isLoading || clientResult.isLoading, refetch: () => { void vendorResult.refetch(); void clientResult.refetch() } }
 }
 
-function SingleInvoice({ id, connectedAddress, onAction }: { id: bigint; connectedAddress?: string; onAction: () => void }) {
+function SingleInvoice({
+  id,
+  connectedAddress,
+  onAction,
+  onOpenHunt,
+}: {
+  id: bigint
+  connectedAddress?: string
+  onAction: () => void
+  onOpenHunt?: (id: bigint) => void
+}) {
   const { chainId } = useAccount()
   const { switchChain } = useSwitchChain()
   const wrongChain = chainId !== ARC_TESTNET_ID
@@ -159,12 +170,13 @@ function SingleInvoice({ id, connectedAddress, onAction }: { id: bigint; connect
         onPay={handlePay}
         onTokenize={handleTokenize}
         onCancel={handleCancel}
+        onViewAsset={onOpenHunt}
       />
     </div>
   )
 }
 
-export default function InvoiceList({ mode }: Props) {
+export default function InvoiceList({ mode, onOpenHunt }: Props) {
   const { address } = useAccount()
   const { ids, isLoading, refetch } = useInvoiceIds(mode, address)
   const [refreshing, setRefreshing] = useState(false)
@@ -227,6 +239,7 @@ export default function InvoiceList({ mode }: Props) {
               id={id}
               connectedAddress={address}
               onAction={handleRefresh}
+              onOpenHunt={onOpenHunt}
             />
           ))}
         </div>

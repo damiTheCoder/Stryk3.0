@@ -39,9 +39,10 @@ function useClientStats(address?: `0x${string}`) {
 
 interface Props {
   onNavigate: (tab: string) => void
+  onOpenHunt?: (id: bigint) => void
 }
 
-export default function Dashboard({ onNavigate }: Props) {
+export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
   const { address, isConnected } = useAccount()
   const vendorIds = useVendorStats(address)
   const clientIds = useClientStats(address)
@@ -142,7 +143,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
         {/* Card 3: Light Surface Card */}
         <div
-          onClick={() => onNavigate('marketplace')}
+          onClick={() => (onOpenHunt ? onOpenHunt(1n) : onNavigate('marketplace'))}
           className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between gap-2">
@@ -347,7 +348,7 @@ export default function Dashboard({ onNavigate }: Props) {
         </div>
 
         <div
-          onClick={() => onNavigate('marketplace')}
+          onClick={() => (onOpenHunt ? onOpenHunt(1n) : onNavigate('marketplace'))}
           className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
