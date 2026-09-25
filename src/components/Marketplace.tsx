@@ -566,38 +566,38 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         </div>
       </div>
 
-      {/* ── Row 3: Capsule Filter, Search, and View Mode Bar ── */}
+      {/* ── Row 3: Filter, Search, and View Mode Bar ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pt-1">
-        {/* Search Input in Capsule Shape */}
+        {/* Search Input */}
         <div className="relative flex-1 max-w-lg">
-          <Search className="size-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="size-4.5 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by Grid #, Invoice ref, or token ID..."
-            className="w-full bg-[var(--surface)] text-[var(--ink)] placeholder-[var(--muted)] text-xs sm:text-sm rounded-full pl-10 pr-9 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 transition-all shadow-xs"
+            className="w-full h-11 sm:h-12 bg-[var(--surface)] text-[var(--ink)] placeholder-[var(--muted)] text-sm rounded-xl sm:rounded-2xl pl-11 pr-10 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 transition-all shadow-xs"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
             >
               ✕
             </button>
           )}
         </div>
 
-        {/* Right controls: Filter tabs, Sort dropdown, and Layout Switcher */}
+        {/* Right controls: Filter tabs, and Layout Switcher */}
         <div className="flex items-center gap-2 flex-wrap justify-between md:justify-end">
-          {/* Capsule Filter Pills */}
-          <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-full shadow-xs">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-xl sm:rounded-2xl shadow-xs h-11 sm:h-12">
             {['All', 'Almost Claimed', 'High Value'].map((tab) => {
               const isActive = activeTab === tab
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`px-3.5 sm:px-4 h-full rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center justify-center ${
                     isActive
                       ? 'bg-[#2563EB] text-white shadow-xs font-bold'
                       : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -610,7 +610,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           </div>
 
           {/* Layout Toggle: Grid vs Table */}
-          <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-full shadow-xs">
+          <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-xl sm:rounded-2xl shadow-xs h-11 sm:h-12">
             <button
               type="button"
               onClick={(e) => {
@@ -618,7 +618,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
                 e.stopPropagation()
                 setViewMode('grid')
               }}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-2.5 h-full rounded-lg sm:rounded-xl transition-all cursor-pointer flex items-center justify-center ${
                 viewMode === 'grid'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -626,7 +626,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
               title="Grid View"
               aria-label="Grid View"
             >
-              <LayoutGrid className="size-4" />
+              <LayoutGrid className="size-4.5" />
             </button>
             <button
               type="button"
@@ -635,7 +635,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
                 e.stopPropagation()
                 setViewMode('table')
               }}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${
+              className={`px-2.5 h-full rounded-lg sm:rounded-xl transition-all cursor-pointer flex items-center justify-center ${
                 viewMode === 'table'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -643,7 +643,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
               title="Table View"
               aria-label="Table View"
             >
-              <List className="size-4" />
+              <List className="size-4.5" />
             </button>
           </div>
 
@@ -651,10 +651,10 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           <button
             type="button"
             onClick={onRefresh}
-            className="p-2 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all cursor-pointer shadow-xs flex items-center justify-center"
+            className="size-11 sm:size-12 rounded-xl sm:rounded-2xl bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all cursor-pointer shadow-xs flex items-center justify-center shrink-0"
             title="Refresh Listings"
           >
-            <RefreshCw className="size-3.5 text-white" />
+            <RefreshCw className="size-4 text-white" />
           </button>
         </div>
       </div>
