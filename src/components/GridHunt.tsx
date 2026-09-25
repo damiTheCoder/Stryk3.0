@@ -25,7 +25,7 @@ import {
   Target,
   Trophy,
 } from 'lucide-react'
-import { STRYK_GRID_CONTRACT, STRYK_NFT_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
+import { STRYK_GRID_CONTRACT, STRYK_NFT_CONTRACT, INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 import { formatUsdc } from '@/onchain-money'
 import { LineChart } from './ui/chart'
 
@@ -85,8 +85,83 @@ const CHART_DATA: Record<Timeframe, { points: number[]; change: string; isPositi
   },
 }
 
+const KNOWN_GRIDS_META: Record<string, {
+  companyName: string
+  invoiceRef: string
+  ticker: string
+  faceValue: bigint
+  cointag: bigint
+  totalRevealed: number
+  volume: string
+}> = {
+  '1': {
+    companyName: 'CyberFlow Corp',
+    invoiceRef: 'INV-2026-001',
+    ticker: 'cyberflow',
+    faceValue: 5000000000n, // $5,000 USDC
+    cointag: 10000000n, // $10 USDC
+    totalRevealed: 84,
+    volume: '$342.8K USDC',
+  },
+  '2': {
+    companyName: 'Nova Builders',
+    invoiceRef: 'INV-2026-002',
+    ticker: 'novabuilders',
+    faceValue: 12500000000n, // $12,500 USDC
+    cointag: 25000000n, // $25 USDC
+    totalRevealed: 62,
+    volume: '$480.2K USDC',
+  },
+  '3': {
+    companyName: 'Apex Logistics',
+    invoiceRef: 'INV-2026-003',
+    ticker: 'apexlogistics',
+    faceValue: 2800000000n, // $2,800 USDC
+    cointag: 5000000n, // $5 USDC
+    totalRevealed: 91,
+    volume: '$195.4K USDC',
+  },
+  '4': {
+    companyName: 'Studio Mirage',
+    invoiceRef: 'INV-2026-004',
+    ticker: 'studiomirage',
+    faceValue: 8400000000n, // $8,400 USDC
+    cointag: 15000000n, // $15 USDC
+    totalRevealed: 45,
+    volume: '$512.0K USDC',
+  },
+  '5': {
+    companyName: 'Quantix Tech',
+    invoiceRef: 'INV-2026-005',
+    ticker: 'quantixtech',
+    faceValue: 16000000000n, // $16,000 USDC
+    cointag: 30000000n, // $30 USDC
+    totalRevealed: 73,
+    volume: '$890.5K USDC',
+  },
+  '6': {
+    companyName: 'Horizon Health',
+    invoiceRef: 'INV-2026-006',
+    ticker: 'horizonhealth',
+    faceValue: 32000000000n, // $32,000 USDC
+    cointag: 50000000n, // $50 USDC
+    totalRevealed: 38,
+    volume: '$1.45M USDC',
+  },
+}
+
 export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: () => void }) {
   const { address } = useAccount()
+
+  const fallback = KNOWN_GRIDS_META[gridId.toString()] || {
+    companyName: `Receivable #${gridId.toString()}`,
+    invoiceRef: `INV-2026-${gridId.toString().padStart(3, '0')}`,
+    ticker: `inv-${gridId.toString()}`,
+    faceValue: 5000000000n,
+    cointag: 10000000n,
+    totalRevealed: 70,
+    volume: '$300.0K USDC',
+  }
 
   // Contract data for realism
   const { data: grid } = useReadContract({
@@ -106,7 +181,33 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     query: { enabled: !!grid },
   })
 
+  const { data: invoice } = useReadContract({
+    address: INVOICE_CONTRACT.address,
+    abi: INVOICE_CONTRACT.abi,
+    functionName: 'getInvoice',
+    args: [gridId],
+    chainId: ARC_TESTNET_ID,
+  })
+
   const nftData = nft as { faceValue: bigint; invoiceRef: string } | undefined
+  const invoiceData = invoice as { id: bigint; vendor: string; client: string; amount: bigint; description: string; dueDate: bigint; status: number } | undefined
+
+  // Unified dynamic tokenized invoice data
+  const invoiceRef = (nftData?.invoiceRef || invoiceData?.description || fallback.invoiceRef).trim()
+  const companyName = fallback.companyName
+  const displayTitle = `${companyName} • ${invoiceRef}`
+  const ticker = fallback.ticker
+
+  const faceValueRaw = nftData?.faceValue || invoiceData?.amount || (grid ? ((grid as readonly unknown[])[4] as bigint) : undefined) || fallback.faceValue
+  const faceValueFormatted = formatUsdc(faceValueRaw)
+  const faceValueNumeric = Number(faceValueRaw) / 1_000_000
+
+  const cointagRaw = (grid ? ((grid as readonly unknown[])[4] as bigint) : undefined) || fallback.cointag
+  const cointagFormatted = formatUsdc(cointagRaw)
+  const cointagNumeric = Number(cointagRaw) / 1_000_000
+
+  const totalRevealed = (grid ? Number((grid as readonly unknown[])[6]) : undefined) ?? fallback.totalRevealed
+  const remainingCells = Math.max(1, 100 - totalRevealed)
 
   // Views: 'asset-detail' | 'hunt'
   const [currentView, setCurrentView] = useState<'asset-detail' | 'hunt'>('asset-detail')
@@ -132,15 +233,11 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
   const [claimedCoordinates, setClaimedCoordinates] = useState<string[]>([])
   const [lastMatchedCoord, setLastMatchedCoord] = useState<string | null>(null)
 
-  // Dynamic names & values
-  const assetName = nftData?.invoiceRef ? `Nova Builders • ${nftData.invoiceRef}` : 'Nova Builders'
-  const marketCapDisplay = nftData?.faceValue ? `$${formatUsdc(nftData.faceValue)} USDC` : '$10.7M'
-  const priceDisplay = '$0.000108'
-  const cointagCost = '$10.00 USDC'
-  const contractAddressDisplay = '0x91a2...820ba3'
+  const realContractAddress = STRYK_NFT_CONTRACT.address
+  const contractAddressDisplay = `${realContractAddress.slice(0, 6)}...${realContractAddress.slice(-6)}`
 
   const copyContractAddress = () => {
-    navigator.clipboard?.writeText('0x91a2fc381691238910009182379123820ba3')
+    navigator.clipboard?.writeText(realContractAddress)
     setCopied(true)
     toast.success('Contract address copied to clipboard!')
     setTimeout(() => setCopied(false), 2000)
@@ -256,11 +353,11 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     if (foundPairInMatrix === '78, 23' || (activeFoundCodepair && foundPairInMatrix === activeFoundCodepair)) {
       setClaimedCoordinates(prev => [...prev, coordKey])
       setLastMatchedCoord(coordKey)
-      setWalletValue(prev => prev + 5000.0)
+      setWalletValue(prev => prev + faceValueNumeric)
       setClaimedTokens(prev => prev + 1)
       setCoordinateInput('')
 
-      toast.success(`🎉 TARGET ACQUIRED! Coordinate [${coordKey}] verified for codepair ${foundPairInMatrix}! +$5,000.00 USDC claimed!`, {
+      toast.success(`🎉 TARGET ACQUIRED! Coordinate [${coordKey}] verified for ${displayTitle}! +$${faceValueFormatted} USDC claimed!`, {
         duration: 5000,
       })
     } else {
@@ -281,12 +378,17 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       'ALL': ['2023', 'Q1', 'Q2', 'Q3', 'Q4', '2024', 'Q1', 'Q2', 'Q3', 'Q4', '2025', 'Now'],
     }
     const currentLabels = labelsMap[timeframe]
-    return CHART_DATA[timeframe].points.map((val, idx) => ({
-      label: currentLabels[idx] || `#${idx + 1}`,
-      value: val * 0.000001,
-      meta: `Price: $${(val * 0.000001).toFixed(6)}`,
-    }))
-  }, [timeframe])
+    const baseScale = cointagNumeric > 0 ? cointagNumeric / 100 : 0.1
+
+    return CHART_DATA[timeframe].points.map((val, idx) => {
+      const scaledVal = Number((val * baseScale).toFixed(2))
+      return {
+        label: currentLabels[idx] || `#${idx + 1}`,
+        value: scaledVal,
+        meta: `Tag: $${scaledVal.toFixed(2)} USDC`,
+      }
+    })
+  }, [timeframe, cointagNumeric])
 
   return (
     <div className="w-full flex flex-col gap-3 font-sans pb-8 select-none">
@@ -338,7 +440,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                 {/* Name & Social Icons Row */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-[var(--ink)] uppercase">
-                    MUSEBOOK
+                    {displayTitle}
                   </h1>
 
                   {/* Icon set matching Image 1: feather, tv, divider, globe, x, search, star */}
@@ -390,7 +492,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
                 {/* Sub-row: ticker | timeframe | contract address + copy button */}
                 <div className="flex items-center gap-2 text-[11px] text-[var(--muted)] font-medium">
-                  <span className="lowercase font-semibold text-[var(--ink)]">musebook</span>
+                  <span className="lowercase font-semibold text-[var(--ink)]">{ticker}</span>
                   <span className="opacity-40">|</span>
                   <span>1w</span>
                   <span className="opacity-40">|</span>
@@ -406,19 +508,19 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </div>
             </div>
 
-            {/* Right: Market Cap & Price Stats (Matching Image 1) */}
+            {/* Right: Market Cap & Price Stats (Matching Image 1, dynamic tokenized invoice data) */}
             <div className="flex items-center gap-6 md:gap-8 self-start md:self-center">
               <div className="flex flex-col items-start md:items-end">
                 <span className="text-[11px] font-medium text-[var(--muted)]">Market cap</span>
                 <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)]">
-                  $10.7M
+                  ${faceValueFormatted} USDC
                 </span>
               </div>
 
               <div className="flex flex-col items-start md:items-end">
-                <span className="text-[11px] font-medium text-[var(--muted)]">Price</span>
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)] font-mono">
-                  $0.000108
+                <span className="text-[11px] font-medium text-[var(--muted)]">Cointag Price</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-[#2563EB] dark:text-[#60A5FA] font-mono">
+                  ${cointagFormatted} USDC
                 </span>
               </div>
             </div>
@@ -472,15 +574,15 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-[var(--surface-strong)] text-xs">
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">24h Volume</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">$342.8K USDC</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">{fallback.volume}</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Liquidity</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">$1.24M</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">${faceValueFormatted} USDC</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Grid Reveal</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">84 / 100 Cells (1 in 16)</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">{totalRevealed} / 100 Cells (1 in {remainingCells})</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Contract Standard</span>
@@ -507,7 +609,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm tracking-wide shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
             >
               <Ticket className="size-4" />
-              <span>{isBuying ? 'Purchasing Cointag…' : `Buy Cointag • ${cointagCost}`}</span>
+              <span>{isBuying ? 'Purchasing Cointag…' : `Buy Cointag • ${cointagFormatted} USDC`}</span>
               <ChevronRight className="size-4 ml-1" />
             </button>
           </div>
@@ -601,7 +703,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               <div className="size-11 sm:size-12 rounded-full overflow-hidden bg-[#B5F22C] flex items-center justify-center shrink-0 border-2 border-black shadow-xs">
                 <img
                   src="/assets/nova_character.png"
-                  alt="Nova Builders Avatar"
+                  alt={`${displayTitle} Avatar`}
                   className="size-full object-cover scale-150"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'
@@ -611,7 +713,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
               <div className="flex flex-col">
                 <h2 className="text-lg sm:text-xl font-black tracking-tight text-[var(--ink)]">
-                  Nova Builders
+                  {displayTitle}
                 </h2>
                 <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] font-medium">
                   <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -644,7 +746,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                 <div className="aspect-[4/3] sm:aspect-square w-full relative flex items-center justify-center p-3">
                   <img
                     src="/assets/nova_character.png"
-                    alt="Nova Builders Character"
+                    alt={`${displayTitle} Character`}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -652,7 +754,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                 {/* Bottom Banner Title */}
                 <div className="bg-[#121318] px-4 py-3 sm:py-3.5 text-white">
                   <h3 className="text-base sm:text-lg font-black tracking-tight">
-                    Nova Builders
+                    {displayTitle}
                   </h3>
                 </div>
               </div>
