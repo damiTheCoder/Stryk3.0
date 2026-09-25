@@ -6,12 +6,11 @@
  * - Capsule Search & Filter Controls
  * - Bento NFT Hunt Cards with compact capsule bars, odds chips, and quick hunt triggers
  */
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useReadContract } from 'wagmi'
 import {
   Grid3x3,
   Search,
-  SlidersHorizontal,
   RefreshCw,
   LayoutGrid,
   List,
@@ -354,18 +353,13 @@ function BentoTableRow({
 // Marketplace Component (Full Compact Bento Grid)
 // ─────────────────────────────────────────────────────────────────────────────
 
-type SortKey = 'newest' | 'price_asc' | 'price_desc' | 'progress'
-
 export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: bigint) => void }) {
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortKey>('newest')
   const [refresh, setRefresh] = useState(0)
-  const [showSort, setShowSort] = useState(false)
   const [activeTab, setActiveTab] = useState('All')
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [activeDayIndex, setActiveDayIndex] = useState<number>(3) // index 3 = Thu peak
   const [funnelPeriod, setFunnelPeriod] = useState<'Weekly' | 'Monthly'>('Weekly')
-  const filterRef = useRef<HTMLDivElement>(null)
 
   // Fast onchain sync for live grid #1
   const { data: onchainGrid1 } = useReadContract({
@@ -401,13 +395,6 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
 
   const onRefresh = useCallback(() => setRefresh((k) => k + 1), [])
 
-  const sortOptions: { key: SortKey; label: string }[] = [
-    { key: 'newest', label: 'Newest First' },
-    { key: 'price_asc', label: 'Tag Price: Low to High' },
-    { key: 'price_desc', label: 'Tag Price: High to Low' },
-    { key: 'progress', label: 'Most Revealed Cells' },
-  ]
-
   // Filter & sort logic
   const filteredListings = useMemo(() => {
     let list = gridListings.filter((item) => {
@@ -429,18 +416,9 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
       return true
     })
 
-    if (sort === 'price_asc') {
-      list.sort((a, b) => (a.cointag < b.cointag ? -1 : 1))
-    } else if (sort === 'price_desc') {
-      list.sort((a, b) => (a.cointag > b.cointag ? -1 : 1))
-    } else if (sort === 'progress') {
-      list.sort((a, b) => b.totalRevealed - a.totalRevealed)
-    } else {
-      list.sort((a, b) => Number(a.gridId - b.gridId))
-    }
-
+    list.sort((a, b) => Number(a.gridId - b.gridId))
     return list
-  }, [gridListings, search, activeTab, sort])
+  }, [gridListings, search, activeTab])
 
   // Daily hunt cointags data
   const huntDays = [
@@ -629,35 +607,6 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
                 </button>
               )
             })}
-          </div>
-
-          {/* Sort Dropdown */}
-          <div className="relative" ref={filterRef}>
-            <button
-              onClick={() => setShowSort(!showSort)}
-              className="px-3.5 py-1.5 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:bg-[#1D4ED8] transition-colors cursor-pointer shadow-xs"
-            >
-              <SlidersHorizontal className="size-3.5 text-white" />
-              <span>{sortOptions.find((s) => s.key === sort)?.label}</span>
-            </button>
-            {showSort && (
-              <div className="absolute right-0 mt-2 z-50 rounded-[18px] overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl border-0">
-                {sortOptions.map((o) => (
-                  <button
-                    key={o.key}
-                    onClick={() => {
-                      setSort(o.key)
-                      setShowSort(false)
-                    }}
-                    className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors hover:bg-[var(--surface-strong)] ${
-                      sort === o.key ? 'font-bold text-[var(--ink)]' : 'text-[var(--muted)]'
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Layout Toggle: Grid vs Table */}
