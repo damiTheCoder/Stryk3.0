@@ -1,11 +1,9 @@
-@import url('https://fonts.cdnfonts.com/css/glacial-indifference-2');
-
 @font-face {
   font-family: 'Glacial Indifference';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: local('Glacial Indifference'), url('https://fonts.cdnfonts.com/s/31913/GlacialIndifference-Regular.woff') format('woff');
+  src: local('Glacial Indifference'), url('/fonts/GlacialIndifference-Regular.woff') format('woff');
 }
 
 @font-face {
@@ -13,7 +11,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: local('Glacial Indifference'), url('https://fonts.cdnfonts.com/s/31913/GlacialIndifference-Bold.woff') format('woff');
+  src: local('Glacial Indifference'), url('/fonts/GlacialIndifference-Bold.woff') format('woff');
 }
 
 @tailwind base;
