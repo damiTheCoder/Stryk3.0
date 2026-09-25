@@ -158,7 +158,7 @@ export default function PaymentPage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-6">
+      <main className="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
         {/* Invoice summary card */}
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -166,8 +166,7 @@ export default function PaymentPage() {
           </div>
         ) : !inv ? (
           <div
-            className="rounded-2xl p-8 text-center"
-            style={{ background: 'var(--surface-strong)' }}
+            className="rounded-2xl p-8 text-center bg-[var(--surface)] border-0 shadow-xs"
           >
             <p style={{ color: 'var(--muted)' }}>Invoice #{invoiceId} not found.</p>
           </div>
@@ -175,11 +174,7 @@ export default function PaymentPage() {
           <>
             {/* Summary */}
             <div
-              className="rounded-2xl p-6 flex flex-col gap-4"
-              style={{
-                background: 'var(--surface-strong)',
-                boxShadow: '0 4px 24px rgba(18,45,69,0.07)',
-              }}
+              className="rounded-2xl p-6 flex flex-col gap-4 bg-[var(--surface)] border-0 shadow-xs"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -205,7 +200,7 @@ export default function PaymentPage() {
               <p className="text-sm" style={{ color: 'var(--muted)' }}>{inv.description}</p>
 
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-muted)' }}>
+                <div className="rounded-xl px-3 py-2.5 bg-[var(--surface-strong)] border-0">
                   <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>From (Vendor)</p>
                   <a
                     href={buildAddressExplorerUrl(ARC_TESTNET_ID, inv.vendor)}
@@ -218,7 +213,7 @@ export default function PaymentPage() {
                     <ExternalLink className="size-3" style={{ color: 'var(--subtle)' }} />
                   </a>
                 </div>
-                <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--surface-muted)' }}>
+                <div className="rounded-xl px-3 py-2.5 bg-[var(--surface-strong)] border-0">
                   <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>Due</p>
                   <p className="font-semibold" style={{ color: 'var(--ink-2)' }}>
                     {new Date(Number(inv.dueDate) * 1000).toLocaleDateString()}
@@ -230,8 +225,7 @@ export default function PaymentPage() {
             {/* Already paid */}
             {inv.status === 1 && (
               <div
-                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
-                style={{ background: 'rgba(26,128,71,0.06)' }}
+                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0 shadow-xs"
               >
                 <CheckCircle className="size-10" style={{ color: 'var(--success)' }} />
                 <p className="display text-lg font-bold" style={{ color: 'var(--success)' }}>Invoice Paid</p>
@@ -242,8 +236,7 @@ export default function PaymentPage() {
             {/* Cancelled */}
             {inv.status === 3 && (
               <div
-                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
-                style={{ background: 'rgba(186,43,76,0.06)' }}
+                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0 shadow-xs"
               >
                 <p className="display text-lg font-bold" style={{ color: 'var(--danger)' }}>Invoice Cancelled</p>
                 <p className="text-sm" style={{ color: 'var(--muted)' }}>This invoice has been cancelled by the vendor.</p>
@@ -253,8 +246,7 @@ export default function PaymentPage() {
             {/* Payment options */}
             {(inv.status === 0 || inv.status === 2) && (
               <div
-                className="rounded-2xl overflow-hidden"
-                style={{ background: 'var(--surface-strong)' }}
+                className="rounded-2xl overflow-hidden bg-[var(--surface)] border-0 shadow-xs"
               >
                 {/* Tabs */}
                 <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

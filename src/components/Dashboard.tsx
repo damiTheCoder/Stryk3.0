@@ -99,10 +99,10 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 2: Light Surface Card (transparent on mobile) */}
+        {/* Card 2: Light Surface Card */}
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
@@ -124,10 +124,10 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 3: Light Surface Card (transparent on mobile) */}
+        {/* Card 3: Light Surface Card */}
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
@@ -152,8 +152,8 @@ export default function Dashboard({ onNavigate }: Props) {
 
       {/* ── Bottom Row: Invoicing Volume Bar Chart & Settlement Channels Matrix ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3">
-        {/* Card 4: Invoicing Volume Bar Chart (transparent on mobile) */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
+        {/* Card 4: Invoicing Volume Bar Chart */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -235,8 +235,8 @@ export default function Dashboard({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Card 5: Settlement Channels Activity Matrix (transparent on mobile) */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
+        {/* Card 5: Settlement Channels Activity Matrix */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -289,11 +289,11 @@ export default function Dashboard({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* ── Quick Workflows Section (transparent on mobile, compact padding) ── */}
+      {/* ── Quick Workflows Section ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Create Invoice</h4>
@@ -308,7 +308,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Issued Invoices</h4>
@@ -323,7 +323,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Grid Hunt Market</h4>

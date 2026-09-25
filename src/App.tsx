@@ -94,7 +94,7 @@ function AppShell({
       data-theme={isLightTheme ? 'light' : 'dark'}
     >
       {/* ── Mobile topbar (flush to top/left/right, no border radius, bg matches page bg) ── */}
-      <header className="lg:hidden sticky top-0 z-20 flex items-center justify-between m-0 bg-[var(--bg)] px-3 py-2.5 rounded-none transition-colors duration-200">
+      <header className="lg:hidden sticky top-0 z-20 flex items-center justify-between m-0 bg-[var(--bg)] px-4 sm:px-6 py-2.5 rounded-none transition-colors duration-200">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -149,7 +149,7 @@ function AppShell({
       )}
 
       {/* ── Desktop 3-Column Single-Row Grid ── */}
-      <div className="px-1 py-1.5 sm:px-2 sm:py-2 lg:p-0 lg:grid lg:grid-cols-[260px_1fr_auto] gap-2.5 sm:gap-3 lg:gap-3.5 items-start max-w-[1600px] mx-auto">
+      <div className="px-4 py-2 sm:px-6 sm:py-3 lg:p-0 lg:grid lg:grid-cols-[260px_1fr_auto] gap-2.5 sm:gap-3 lg:gap-3.5 items-start max-w-[1600px] mx-auto">
 
         {/* ── COLUMN 1: SIDEBAR (LEFT) ── */}
         <aside

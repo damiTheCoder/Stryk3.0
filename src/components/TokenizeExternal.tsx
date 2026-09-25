@@ -132,15 +132,14 @@ export default function TokenizeExternal() {
   // ── Success screen ──────────────────────────────────────────────────────────
   if (step === 'done') {
     return (
-      <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
+      <div className="flex flex-col gap-6 w-full pb-6 font-sans">
         <div>
           <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>Invoice Tokenized</p>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Your external invoice is now an onchain NFT receivable.</p>
         </div>
 
         <div
-          className="rounded-2xl p-6 flex flex-col gap-4 text-center"
-          style={{ background: 'rgba(37,99,235,0.06)' }}
+          className="rounded-2xl p-6 flex flex-col gap-4 text-center bg-[var(--surface)] border-0 shadow-xs"
         >
           <CheckCircle className="size-10 mx-auto" style={{ color: '#2563EB' }} />
           <div>
@@ -177,8 +176,7 @@ export default function TokenizeExternal() {
 
         {/* Next steps */}
         <div
-          className="rounded-xl p-4 text-sm space-y-1.5"
-          style={{ background: 'rgba(255,255,255,0.03)' }}
+          className="rounded-xl p-4 text-sm space-y-1.5 bg-[var(--surface)] border-0 shadow-xs"
         >
           <p className="font-semibold" style={{ color: 'var(--ink-2)' }}>What's next</p>
           <p style={{ color: 'var(--muted)' }}>→ List this NFT on the Grid Hunt from the Marketplace tab</p>
@@ -188,8 +186,7 @@ export default function TokenizeExternal() {
 
         <button
           onClick={() => { setStep('idle'); setAmount(''); setDueDate(''); setDescription(''); setFileName(null); setFileDataUrl(null); setMintedTokenId(null) }}
-          className="w-full py-3 rounded-2xl text-sm font-semibold transition-all"
-          style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--ink-2)' }}
+          className="w-full py-3 rounded-2xl text-sm font-semibold transition-all bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-strong)]"
         >
           Tokenize another invoice
         </button>
@@ -199,7 +196,7 @@ export default function TokenizeExternal() {
 
   // ── Form ────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
+    <div className="flex flex-col gap-6 w-full pb-6 font-sans">
       {/* Header */}
       <div>
         <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>Tokenize Invoice</p>
@@ -222,8 +219,7 @@ export default function TokenizeExternal() {
       <div className="space-y-3">
         {/* Upload receipt */}
         <div
-          className="rounded-2xl p-4"
-          style={{ background: 'var(--surface-muted)' }}
+          className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs"
         >
           <label className="flex items-center gap-2 mb-3 cursor-pointer">
             <Upload className="size-3.5" style={{ color: 'var(--subtle)' }} />
@@ -254,7 +250,7 @@ export default function TokenizeExternal() {
         </div>
 
         {/* Description */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <FileText className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Invoice Description</span>
@@ -270,7 +266,7 @@ export default function TokenizeExternal() {
         </div>
 
         {/* Amount */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <DollarSign className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Face Value (USDC)</span>
@@ -297,7 +293,7 @@ export default function TokenizeExternal() {
         </div>
 
         {/* Due date */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <Calendar className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Original Due Date</span>
@@ -316,8 +312,7 @@ export default function TokenizeExternal() {
       {/* Step indicator */}
       {step !== 'idle' && (
         <div
-          className="rounded-xl p-3 flex items-center gap-3"
-          style={{ background: 'rgba(255,255,255,0.04)' }}
+          className="rounded-xl p-3 flex items-center gap-3 bg-[var(--surface)] border-0 shadow-xs"
         >
           <Loader2 className="size-4 animate-spin shrink-0" style={{ color: 'var(--accent)' }} />
           <div>

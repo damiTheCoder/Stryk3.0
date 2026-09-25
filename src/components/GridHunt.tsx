@@ -132,7 +132,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
+    <div className="flex flex-col gap-6 w-full pb-6 font-sans">
 
       {/* Back */}
       <button onClick={onBack} className="flex items-center gap-2 text-sm w-fit transition-opacity hover:opacity-70"
@@ -142,8 +142,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
       {/* Header */}
       <div
-        className="rounded-2xl px-6 py-6 flex flex-col gap-3"
-        style={{ background: 'rgba(255,255,255,0.04)' }}
+        className="rounded-2xl px-6 py-6 flex flex-col gap-3 bg-[var(--surface)] border-0 shadow-xs"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -187,7 +186,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
             <span>{totalRevealed.toString()} / 100 cells revealed</span>
             <span>{pct}%</span>
           </div>
-          <div className="rounded-full overflow-hidden h-2" style={{ background: 'rgba(255,255,255,0.07)' }}>
+          <div className="rounded-full overflow-hidden h-2 bg-[var(--surface-strong)]">
             <div className="h-full rounded-full transition-all"
               style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--accent), #2563EB)' }} />
           </div>
@@ -201,8 +200,8 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
           { icon: <Grid3x3 className="size-4 mx-auto mb-1" />, label: 'Reveal cells', sub: 'Find the winner' },
           { icon: <Trophy className="size-4 mx-auto mb-1" />, label: 'Claim NFT', sub: 'Win the receivable' },
         ].map(s => (
-          <div key={s.label} className="rounded-xl py-3 px-2"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'var(--muted)' }}>
+          <div key={s.label} className="rounded-xl py-3 px-2 bg-[var(--surface)] border-0 shadow-xs"
+            style={{ color: 'var(--muted)' }}>
             {s.icon}
             <p className="text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>{s.label}</p>
             <p className="text-xs">{s.sub}</p>
@@ -212,8 +211,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
       {/* 10x10 Grid */}
       <div
-        className="rounded-2xl p-4"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+        className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs"
       >
         <div className="grid grid-cols-10 gap-1.5">
           {cellArr.map((rev, i) => (
@@ -233,8 +231,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       {/* Pending reveal panel */}
       {pendingCell !== null && !claimed && (
         <div
-          className="rounded-2xl p-4 flex items-center justify-between gap-4"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+          className="rounded-2xl p-4 flex items-center justify-between gap-4 bg-[var(--surface)] border-0 shadow-xs"
         >
           <div>
             <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
@@ -273,8 +270,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
       {/* Claimed banner */}
       {claimed && (
-        <div className="rounded-2xl p-5 flex items-center gap-4"
-          style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)' }}>
+        <div className="rounded-2xl p-5 flex items-center gap-4 bg-[var(--surface)] border-0 shadow-xs">
           <Trophy className="size-7 shrink-0" style={{ color: '#2563EB' }} />
           <div>
             <p className="font-semibold" style={{ color: '#2563EB' }}>NFT Claimed!</p>

@@ -66,13 +66,7 @@ export default function InvoiceCard({ invoice, connectedAddress, onPay, onTokeni
   const formattedAmount = Amount.fromRaw(invoice.amount, usdcDecimalsFor(ARC_TESTNET_ID)).toFixed(2)
 
   return (
-    <div
-      className="rounded-2xl p-4 space-y-3"
-      style={{
-        background: 'var(--surface-strong)',
-        backdropFilter: 'blur(20px)',
-      }}
-    >
+    <div className="rounded-2xl p-4 space-y-3 bg-[var(--surface)] border-0 shadow-xs">
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div>

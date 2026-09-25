@@ -127,7 +127,7 @@ function SingleInvoice({ id, connectedAddress, onAction }: { id: bigint; connect
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl p-4 flex items-center gap-2" style={{ background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
+      <div className="rounded-2xl p-4 flex items-center gap-2 bg-[var(--surface)] border-0 shadow-xs">
         <Loader2 className="size-4 animate-spin" style={{ color: 'var(--subtle)' }} />
         <span className="text-sm" style={{ color: 'var(--muted)' }}>Loading invoice #{id.toString()}...</span>
       </div>
@@ -182,7 +182,7 @@ export default function InvoiceList({ mode }: Props) {
   }
 
   return (
-    <div className="space-y-4 w-full pb-6 font-sans px-1 sm:px-0">
+    <div className="space-y-4 w-full pb-6 font-sans">
       <div className="flex items-center justify-between">
         <div>
           <p className="display text-2xl font-bold" style={{ color: 'var(--ink)' }}>{titleMap[mode]}</p>
@@ -200,7 +200,7 @@ export default function InvoiceList({ mode }: Props) {
       </div>
 
       {!address && (
-        <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl p-6 text-center bg-[var(--surface)] border-0 shadow-xs">
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Connect your wallet to view invoices.</p>
         </div>
       )}
@@ -213,7 +213,7 @@ export default function InvoiceList({ mode }: Props) {
       )}
 
       {address && !isLoading && ids.length === 0 && (
-        <div className="rounded-2xl p-8 flex flex-col items-center gap-3" style={{ background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl p-8 flex flex-col items-center gap-3 bg-[var(--surface)] border-0 shadow-xs">
           <Inbox className="size-8" style={{ color: 'var(--subtle)' }} />
           <p className="text-sm text-center" style={{ color: 'var(--muted)' }}>No invoices yet.</p>
         </div>

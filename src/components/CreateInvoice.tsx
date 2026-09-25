@@ -98,7 +98,7 @@ export default function CreateInvoice({ onCreated }: Props) {
   }
 
   return (
-    <div className="space-y-4 w-full pb-6 font-sans px-1 sm:px-0">
+    <div className="space-y-4 w-full pb-6 font-sans">
       <div>
         <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>
           New Invoice
@@ -111,11 +111,7 @@ export default function CreateInvoice({ onCreated }: Props) {
       {/* Shareable link banner */}
       {paymentLink && (
         <div
-          className="rounded-2xl p-4 flex flex-col gap-3"
-          style={{
-            background: 'rgba(26,128,71,0.07)',
-
-          }}
+          className="rounded-2xl p-4 flex flex-col gap-3 bg-[var(--surface)] border-0 shadow-xs"
         >
           <div className="flex items-center gap-2">
             <Check className="size-4" style={{ color: 'var(--success)' }} />
@@ -124,8 +120,7 @@ export default function CreateInvoice({ onCreated }: Props) {
             </p>
           </div>
           <div
-            className="flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.7)' }}
+            className="flex items-center gap-2 rounded-xl px-3 py-2 bg-[var(--surface-strong)]"
           >
             <p className="flex-1 text-xs mono truncate" style={{ color: 'var(--ink-2)' }}>
               {paymentLink}
@@ -159,7 +154,7 @@ export default function CreateInvoice({ onCreated }: Props) {
 
       <div className="space-y-3">
         {/* Client address */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <User className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Client Address</span>
@@ -177,7 +172,7 @@ export default function CreateInvoice({ onCreated }: Props) {
         </div>
 
         {/* Client email */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <Mail className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Client Email</span>
@@ -197,7 +192,7 @@ export default function CreateInvoice({ onCreated }: Props) {
         </div>
 
         {/* Amount */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <DollarSign className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Amount (USDC)</span>
@@ -219,7 +214,7 @@ export default function CreateInvoice({ onCreated }: Props) {
         </div>
 
         {/* Description */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <AlignLeft className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Description</span>
@@ -235,7 +230,7 @@ export default function CreateInvoice({ onCreated }: Props) {
         </div>
 
         {/* Due date */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--surface-muted)' }}>
+        <div className="rounded-2xl p-4 bg-[var(--surface)] border-0 shadow-xs">
           <label className="flex items-center gap-2 mb-2">
             <Calendar className="size-3.5" style={{ color: 'var(--subtle)' }} />
             <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Due Date</span>

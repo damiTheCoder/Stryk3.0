@@ -200,7 +200,7 @@ function BentoNftCard({
   return (
     <div
       onClick={() => onHunt(item.gridId)}
-      className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.015] active:scale-[0.99] group shadow-xs select-none border border-black/5 dark:border-white/5 sm:border-transparent"
+      className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.015] active:scale-[0.99] group shadow-xs select-none border-0"
     >
       {/* Artwork container */}
       <div className="relative aspect-square w-full rounded-[16px] sm:rounded-[18px] overflow-hidden p-0.5 bg-[var(--surface-strong)]">
@@ -453,7 +453,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   ]
 
   return (
-    <div className="space-y-2.5 sm:space-y-3 w-full pb-6 font-sans select-none px-0.5 sm:px-0">
+    <div className="space-y-2.5 sm:space-y-3 w-full pb-6 font-sans select-none">
       {/* ── Row 1: Top 2 Bento Highlight Cards (Compact & Non-wrapping) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Featured Hunt Card */}
@@ -482,8 +482,8 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           </div>
         </div>
 
-        {/* Card 2: Market Liquidity Bento Card (transparent on mobile) */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] border border-black/5 dark:border-white/5 sm:border-transparent">
+        {/* Card 2: Market Liquidity Bento Card */}
+        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] border-0 shadow-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
               Total Receivables Listed
@@ -505,8 +505,8 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
         </div>
       </div>
 
-      {/* ── Row 2: Hunt Activity Capsule Bar Chart (transparent on mobile) ── */}
-      <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
+      {/* ── Row 2: Hunt Activity Capsule Bar Chart ── */}
+      <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -641,7 +641,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
               <span>{sortOptions.find((s) => s.key === sort)?.label}</span>
             </button>
             {showSort && (
-              <div className="absolute right-0 mt-2 z-50 rounded-[18px] overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl border border-black/5 dark:border-white/10">
+              <div className="absolute right-0 mt-2 z-50 rounded-[18px] overflow-hidden py-1 w-48 bg-[var(--surface)] text-[var(--ink)] shadow-xl border-0">
                 {sortOptions.map((o) => (
                   <button
                     key={o.key}
@@ -712,7 +712,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
 
       {/* ── Row 4: Listings Display (Bento Grid or Table) ── */}
       {filteredListings.length === 0 ? (
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] p-8 text-center flex flex-col items-center justify-center gap-2 border border-black/5 dark:border-white/5 sm:border-transparent">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] p-8 text-center flex flex-col items-center justify-center gap-2 border-0 shadow-xs">
           <Grid3x3 className="size-7 text-[var(--muted)]" />
           <h4 className="text-sm font-bold text-[var(--ink)]">No Listings Found</h4>
           <p className="text-xs text-[var(--muted)] max-w-sm">
@@ -741,7 +741,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           ))}
         </div>
       ) : (
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] overflow-hidden shadow-xs border border-black/5 dark:border-white/5 sm:border-transparent">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] overflow-hidden shadow-xs border-0">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[600px] text-left">
               <thead>
