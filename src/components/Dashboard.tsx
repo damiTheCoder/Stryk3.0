@@ -71,13 +71,13 @@ export default function Dashboard({ onNavigate }: Props) {
   ]
 
   return (
-    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none">
+    <div className="space-y-2.5 sm:space-y-3 w-full pb-6 font-sans select-none">
       {/* ── Top Row: 3 Bento KPI Cards (Compact & Non-wrapping) ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Hero Card */}
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
@@ -102,7 +102,7 @@ export default function Dashboard({ onNavigate }: Props) {
         {/* Card 2: Light Surface Card (transparent on mobile) */}
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
@@ -127,7 +127,7 @@ export default function Dashboard({ onNavigate }: Props) {
         {/* Card 3: Light Surface Card (transparent on mobile) */}
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-medium text-[var(--muted)] whitespace-nowrap truncate">
@@ -153,7 +153,7 @@ export default function Dashboard({ onNavigate }: Props) {
       {/* ── Bottom Row: Invoicing Volume Bar Chart & Settlement Channels Matrix ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 4: Invoicing Volume Bar Chart (transparent on mobile) */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -236,7 +236,7 @@ export default function Dashboard({ onNavigate }: Props) {
         </div>
 
         {/* Card 5: Settlement Channels Activity Matrix (transparent on mobile) */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border border-black/5 dark:border-white/5 sm:border-transparent">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -293,7 +293,7 @@ export default function Dashboard({ onNavigate }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Create Invoice</h4>
@@ -308,7 +308,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Issued Invoices</h4>
@@ -323,7 +323,7 @@ export default function Dashboard({ onNavigate }: Props) {
 
         <div
           onClick={() => onNavigate('marketplace')}
-          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-2.5 sm:p-3 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border border-black/5 dark:border-white/5 sm:border-transparent"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--ink)]">Grid Hunt Market</h4>

@@ -149,7 +149,7 @@ function AppShell({
       )}
 
       {/* ── Desktop 3-Column Single-Row Grid ── */}
-      <div className="p-2 sm:p-2.5 lg:p-0 lg:grid lg:grid-cols-[260px_1fr_auto] gap-2.5 sm:gap-3 lg:gap-3.5 items-start max-w-[1600px] mx-auto">
+      <div className="px-1 py-1.5 sm:px-2 sm:py-2 lg:p-0 lg:grid lg:grid-cols-[260px_1fr_auto] gap-2.5 sm:gap-3 lg:gap-3.5 items-start max-w-[1600px] mx-auto">
 
         {/* ── COLUMN 1: SIDEBAR (LEFT) ── */}
         <aside

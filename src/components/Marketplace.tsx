@@ -300,19 +300,25 @@ function BentoTableRow({
 }) {
   const revealed = item.totalRevealed
   const remaining = 100 - revealed
+  const [from, to] = nftGradient(item.gridId)
 
   return (
     <tr
       onClick={() => onHunt(item.gridId)}
       className="hover:bg-[var(--surface-strong)] transition-colors cursor-pointer text-xs"
     >
-      <td className="py-2.5 px-3 flex items-center gap-2.5 sm:gap-3">
-        <div className="size-7 sm:size-8 rounded-lg overflow-hidden shrink-0 bg-[var(--surface-strong)]">
-          <NftArtwork gridId={item.gridId} size={32} />
-        </div>
-        <div className="truncate">
-          <span className="font-bold text-[var(--ink)] block whitespace-nowrap">Invoice #{item.tokenId.toString()}</span>
-          <span className="text-[10px] text-[var(--muted)] whitespace-nowrap">{item.invoiceRef || `Grid #${item.gridId}`}</span>
+      <td className="py-2.5 px-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div
+            className="size-7 sm:size-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center font-bold text-white text-[10px] shadow-xs"
+            style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+          >
+            #{item.gridId.toString()}
+          </div>
+          <div className="truncate">
+            <span className="font-bold text-[var(--ink)] block whitespace-nowrap">Invoice #{item.tokenId.toString()}</span>
+            <span className="text-[10px] text-[var(--muted)] whitespace-nowrap">{item.invoiceRef || `Grid #${item.gridId}`}</span>
+          </div>
         </div>
       </td>
       <td className="py-2.5 px-3 font-bold text-[var(--ink)] whitespace-nowrap">
@@ -323,7 +329,12 @@ function BentoTableRow({
       </td>
       <td className="py-2.5 px-3">
         <div className="flex items-center gap-2 max-w-[120px]">
-          <Progress value={revealed} className="h-1.5" />
+          <div className="h-1.5 flex-1 rounded-full bg-[var(--surface-strong)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[var(--ink)]"
+              style={{ width: `${revealed}%` }}
+            />
+          </div>
           <span className="text-[10px] text-[var(--muted)] font-medium shrink-0">{revealed}/100</span>
         </div>
       </td>
@@ -442,7 +453,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
   ]
 
   return (
-    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-6 font-sans select-none px-2 sm:px-0">
+    <div className="space-y-2.5 sm:space-y-3 w-full pb-6 font-sans select-none px-0.5 sm:px-0">
       {/* ── Row 1: Top 2 Bento Highlight Cards (Compact & Non-wrapping) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 1: Inverted Black Featured Hunt Card */}
@@ -652,24 +663,36 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
           {/* Layout Toggle: Grid vs Table */}
           <div className="flex items-center gap-1 p-1 bg-[var(--surface)] rounded-full shadow-xs">
             <button
-              onClick={() => setViewMode('grid')}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setViewMode('grid')
+              }}
               className={`p-1.5 rounded-full transition-all cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
               }`}
               title="Grid View"
+              aria-label="Grid View"
             >
               <LayoutGrid className="size-4" />
             </button>
             <button
-              onClick={() => setViewMode('table')}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setViewMode('table')
+              }}
               className={`p-1.5 rounded-full transition-all cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-[#2563EB] text-white shadow-xs'
                   : 'text-[var(--muted)] hover:text-[var(--ink)]'
               }`}
               title="Table View"
+              aria-label="Table View"
             >
               <List className="size-4" />
             </button>
@@ -677,6 +700,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
 
           {/* Refresh */}
           <button
+            type="button"
             onClick={onRefresh}
             className="p-2 rounded-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all cursor-pointer shadow-xs flex items-center justify-center"
             title="Refresh Listings"
@@ -695,6 +719,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
             No active grid listings matched your search criteria. Try modifying your filter or search keywords.
           </p>
           <button
+            type="button"
             onClick={() => { setSearch(''); setActiveTab('All') }}
             className="px-3.5 py-1.5 rounded-full bg-[#2563EB] text-white text-xs sm:text-sm font-semibold hover:bg-[#1D4ED8] transition-colors cursor-pointer"
           >
@@ -718,7 +743,7 @@ export default function Marketplace({ onSelectGrid }: { onSelectGrid: (gridId: b
       ) : (
         <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] overflow-hidden shadow-xs border border-black/5 dark:border-white/5 sm:border-transparent">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[600px] text-left">
               <thead>
                 <tr className="bg-[var(--surface-strong)] text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">
                   <th className="py-2.5 px-3">Receivable Asset</th>

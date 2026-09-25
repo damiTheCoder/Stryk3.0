@@ -132,7 +132,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-6 font-sans px-2 sm:px-0">
+    <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
 
       {/* Back */}
       <button onClick={onBack} className="flex items-center gap-2 text-sm w-fit transition-opacity hover:opacity-70"

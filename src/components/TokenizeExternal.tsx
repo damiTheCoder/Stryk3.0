@@ -132,7 +132,7 @@ export default function TokenizeExternal() {
   // ── Success screen ──────────────────────────────────────────────────────────
   if (step === 'done') {
     return (
-      <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-6 font-sans px-2 sm:px-0">
+      <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
         <div>
           <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>Invoice Tokenized</p>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Your external invoice is now an onchain NFT receivable.</p>
@@ -199,7 +199,7 @@ export default function TokenizeExternal() {
 
   // ── Form ────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-6 font-sans px-2 sm:px-0">
+    <div className="flex flex-col gap-6 w-full pb-6 font-sans px-1 sm:px-0">
       {/* Header */}
       <div>
         <p className="display text-2xl font-bold mb-1" style={{ color: 'var(--ink)' }}>Tokenize Invoice</p>
