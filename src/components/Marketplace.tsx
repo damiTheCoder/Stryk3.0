@@ -6,6 +6,7 @@ import MarketplaceTable from './marketplace/MarketplaceTable'
 import MarketplaceFilters from './marketplace/MarketplaceFilters'
 import MarketplaceSkeleton from './marketplace/MarketplaceSkeleton'
 import BoardSeedPreview from './marketplace/BoardSeedPreview'
+import { api } from '@/lib/api'
 import { Amount, usdcDecimalsFor } from '@/onchain-money'
 import { ARC_TESTNET_ID } from '../contractConfig'
 
@@ -44,7 +45,7 @@ export default function Marketplace({ onSelectGrid }: Props) {
   const { data = [], isLoading, error } = useQuery<MarketplaceItem[]>({
     queryKey: ['marketplace'],
     queryFn: async () => {
-      const res = await fetch('/api/marketplace')
+      const res = await fetch(api('/api/marketplace'))
       if (!res.ok) throw new Error(`Marketplace fetch failed: ${res.status}`)
       const json = await res.json()
       return Array.isArray(json) ? json.map(mapApiToItem) : []

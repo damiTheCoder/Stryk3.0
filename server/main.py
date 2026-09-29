@@ -1063,9 +1063,16 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Veo API", version="2.0.0", lifespan=lifespan)
 
+_vercel_origin = os.getenv("VERCEL_APP_URL", "").rstrip("/")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        *([_vercel_origin] if _vercel_origin else []),
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

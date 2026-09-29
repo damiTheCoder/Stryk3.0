@@ -4,6 +4,7 @@ import { Ticket, Copy, Check, ArrowRight, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Amount, usdcDecimalsFor } from '@/onchain-money'
 import { ARC_TESTNET_ID } from '../contractConfig'
+import { api } from '@/lib/api'
 
 export interface CointagCodeItem {
   invoiceId: number
@@ -48,7 +49,7 @@ export default function CodeStore({ onOpenHunt, onNavigateMarketplace }: Props) 
     }
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/cointags/${address}`)
+      const res = await fetch(api(`/api/cointags/${address}`))
       if (res.ok) {
         const data = await res.json()
         setCodes(data.codes || [])

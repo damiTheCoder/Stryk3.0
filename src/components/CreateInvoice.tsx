@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { parseUsdc } from '@/onchain-money'
 import { InvoiceDownloadButton } from './InvoiceDownloadButton'
 import type { InvoicePdfData } from '@/lib/invoicePdf'
+import { api } from '@/lib/api'
 
 interface Props {
   onCreated: () => void
@@ -98,7 +99,7 @@ export default function CreateInvoice({ onCreated }: Props) {
         : Math.floor(Date.now() / 1000) + 86400 * 30
       const parsedAmt = parseUsdc(amount)
 
-      const res = await fetch('/api/invoices', {
+      const res = await fetch(api('/api/invoices'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

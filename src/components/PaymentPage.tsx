@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle, Loader2, ExternalLink, ArrowLeft, Tag, ShieldC
 import { ConnectKitButton } from 'connectkit'
 import StrykLogo from './StrykLogo'
 import { toast } from 'sonner'
+import { api } from '@/lib/api'
 import { ARC_TESTNET_ID } from '../contractConfig'
 import { getUsdc, buildTxExplorerUrl, buildAddressExplorerUrl } from '@/onchain-facts'
 import { InvoiceDownloadButton } from './InvoiceDownloadButton'
@@ -81,7 +82,7 @@ export default function PaymentPage() {
   const fetchInvoice = useCallback(async () => {
     if (!invoiceId) return
     try {
-      const res = await fetch(`/api/invoices/${invoiceId}`)
+      const res = await fetch(api(`/api/invoices/${invoiceId}`))
       if (res.ok) {
         const data = await res.json() as ApiInvoice
         setInv(data)
@@ -121,7 +122,7 @@ export default function PaymentPage() {
       if (!invoiceId) return
 
       try {
-        const res = await fetch(`/api/invoices/${invoiceId}`)
+        const res = await fetch(api(`/api/invoices/${invoiceId}`))
         if (res.ok) {
           const data = await res.json() as ApiInvoice
           setInv(data)
@@ -183,7 +184,7 @@ export default function PaymentPage() {
 
       // Report payment to backend for instant update
       try {
-        await fetch(`/api/invoices/${inv.id}/report-payment`, {
+        await fetch(api(`/api/invoices/${inv.id}/report-payment`), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tx_hash: txHash }),

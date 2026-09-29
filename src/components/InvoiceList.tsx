@@ -3,6 +3,7 @@ import { Loader2, RefreshCw, Inbox } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import InvoiceCard, { type InvoiceData } from './InvoiceCard'
+import { api } from '@/lib/api'
 
 interface Props {
   mode: 'vendor' | 'client' | 'all'
@@ -39,9 +40,9 @@ export default function InvoiceList({ mode, onOpenHunt, onTokenize }: Props) {
   const fetchInvoices = useCallback(async () => {
     setIsLoading(true)
     try {
-      let url = '/api/invoices'
+      let url = api('/api/invoices')
       if (mode === 'vendor' && address) {
-        url = `/api/invoices?creator=${address.toLowerCase()}`
+        url = api(`/api/invoices?creator=${address.toLowerCase()}`)
       }
       const res = await fetch(url)
       if (res.ok) {
@@ -98,7 +99,7 @@ export default function InvoiceList({ mode, onOpenHunt, onTokenize }: Props) {
 
   const handleReportPayment = async (id: string) => {
     try {
-      const res = await fetch(`/api/invoices/${id}/report-payment`, {
+      const res = await fetch(api(`/api/invoices/${id}/report-payment`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),

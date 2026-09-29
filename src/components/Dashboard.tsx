@@ -14,13 +14,14 @@ import {
 import { INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 
 import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 
 function useVendorStats(address?: `0x${string}`) {
   const { data } = useQuery({
     queryKey: ['vendorInvoices', address],
     queryFn: async () => {
       if (!address) return []
-      const res = await fetch(`/api/invoices?creator=${address}`)
+      const res = await fetch(api(`/api/invoices?creator=${address}`))
       if (!res.ok) return []
       const json = await res.json()
       return (json.invoices ?? []) as any[]
@@ -36,7 +37,7 @@ function useClientStats(address?: `0x${string}`) {
     queryKey: ['clientInvoices', address],
     queryFn: async () => {
       if (!address) return []
-      const res = await fetch(`/api/invoices?creator=${address}`)
+      const res = await fetch(api(`/api/invoices?creator=${address}`))
       if (!res.ok) return []
       const json = await res.json()
       return (json.invoices ?? []) as any[]

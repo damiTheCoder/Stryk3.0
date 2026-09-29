@@ -18,6 +18,7 @@ import {
 import { getUsdc, buildAddressExplorerUrl, buildTxExplorerUrl } from '@/onchain-facts'
 import { parseUsdc, formatUsdc } from '@/onchain-money'
 import { generateBoard } from '@/lib/tokenize'
+import { api } from '@/lib/api'
 
 const USDC_ADDRESS = getUsdc(ARC_TESTNET_ID)!.address as `0x${string}`
 const INVOICE_MANAGER_ADDRESS = INVOICE_MANAGER_CONTRACT.address
@@ -291,7 +292,7 @@ export default function TokenizeExternal({ prefill, onOpenHunt, onClearPrefill }
     winnersData?: number[]
   ): Promise<boolean> => {
     try {
-      const res = await fetch(`/api/invoices/${offchainId}/stage-pairs`, {
+      const res = await fetch(api(`/api/invoices/${offchainId}/stage-pairs`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -323,7 +324,7 @@ export default function TokenizeExternal({ prefill, onOpenHunt, onClearPrefill }
           toast.info(`Retrying on-chain link (attempt ${attempt + 1}/6)...`)
           await new Promise((r) => setTimeout(r, delays[attempt - 1]))
         }
-        const res = await fetch(`/api/invoices/${offchainId}/link-onchain`, {
+        const res = await fetch(api(`/api/invoices/${offchainId}/link-onchain`), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ onchainId: targetOnchainId }),
@@ -371,7 +372,7 @@ export default function TokenizeExternal({ prefill, onOpenHunt, onClearPrefill }
           toast.info(`Retrying reference sheet save (attempt ${attempt + 1}/3)...`)
           await new Promise((r) => setTimeout(r, delays[attempt - 1]))
         }
-        const pairsRes = await fetch(`/api/board/${targetOnchainId}/pairs`, {
+        const pairsRes = await fetch(api(`/api/board/${targetOnchainId}/pairs`), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -395,7 +396,7 @@ export default function TokenizeExternal({ prefill, onOpenHunt, onClearPrefill }
       } catch {}
       if (offchainId) {
         try {
-          await fetch(`/api/invoices/${offchainId}/link-onchain`, {
+          await fetch(api(`/api/invoices/${offchainId}/link-onchain`), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ onchain_id: targetOnchainId }),

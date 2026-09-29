@@ -38,6 +38,7 @@ import {
 import { formatUsdc } from '@/onchain-money'
 import { deriveCode } from '../lib/code'
 import { coordToLabel, labelToCoord, getMerkleProof } from '@/lib/tokenize'
+import { api } from '@/lib/api'
 import PurchaseSuccessModal from './PurchaseSuccessModal'
 import CodeEntryModal from './CodeEntryModal'
 import { ChartAreaStep } from './ui/chart-area-step'
@@ -348,7 +349,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     setBoardLoading(true)
     setBoardError(null)
     try {
-      const res = await fetch(`/api/board/${gridId.toString()}/reference-sheet`)
+      const res = await fetch(api(`/api/board/${gridId.toString()}/reference-sheet`))
       if (!res.ok) {
         throw new Error(`Failed to load reference sheet (${res.status})`)
       }
@@ -380,7 +381,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     setIsRestoringPairs(true)
     toast.info('Restoring reference sheet pairs to backend…')
     try {
-      const res = await fetch(`/api/board/${gridId.toString()}/pairs`, {
+      const res = await fetch(api(`/api/board/${gridId.toString()}/pairs`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pairs: pendingSessionPairs.pairs }),
@@ -479,7 +480,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       // user HAS on-chain access and can still enter the hunt with the
       // code shown in the modal.
       try {
-        const registerRes = await fetch('/api/cointags/register', {
+        const registerRes = await fetch(api('/api/cointags/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -560,7 +561,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
 
     setIsClaiming(true)
     try {
-      const res = await fetch(`/api/board/${gridId.toString()}/claim`, {
+      const res = await fetch(api(`/api/board/${gridId.toString()}/claim`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
