@@ -1,116 +1,208 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
+import { useWriteContract, useAccount, useSwitchChain, usePublicClient } from 'wagmi'
 import { erc20Abi } from 'viem'
-import { MoonPayBuyWidget } from '@moonpay/moonpay-react'
-import { CreditCard, ArrowRight, CheckCircle, Loader2, ExternalLink, ArrowLeft } from 'lucide-react'
+import { ArrowRight, CheckCircle, Loader2, ExternalLink, ArrowLeft, Tag, ShieldCheck, AlertCircle } from 'lucide-react'
 import { ConnectKitButton } from 'connectkit'
 import StrykLogo from './StrykLogo'
 import { toast } from 'sonner'
-import { INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
+import { ARC_TESTNET_ID } from '../contractConfig'
 import { getUsdc, buildTxExplorerUrl, buildAddressExplorerUrl } from '@/onchain-facts'
-import { formatUsdc } from '@/onchain-money'
+import { InvoiceDownloadButton } from './InvoiceDownloadButton'
+import type { InvoicePdfData } from '@/lib/invoicePdf'
 
-const CONTRACT_ADDRESS = INVOICE_CONTRACT.address
-const CONTRACT_ABI = INVOICE_CONTRACT.abi
 const USDC_ADDRESS = getUsdc(ARC_TESTNET_ID)!.address as `0x${string}`
 
-type InvoiceStatus = 0 | 1 | 2 | 3
-
-interface Invoice {
-  id: bigint
-  vendor: `0x${string}`
-  client: `0x${string}`
-  amount: bigint
-  description: string
-  dueDate: bigint
-  status: InvoiceStatus
-  tokenContract: `0x${string}`
+interface ApiInvoice {
+  id: string
+  numeric_id?: number
+  onchain_id?: number
+  creator: string
+  client_address?: string
+  client_email?: string
+  description?: string
+  amount: string
+  amount_usdc: number
+  tagged_amount?: string
+  tagged_amount_usdc?: number
+  stablecoin: string
+  due_date: number
+  debtor_ref?: string
+  metadata_uri?: string
+  status: number
+  status_label: string
+  is_overdue: boolean
+  payment_tx_hash?: string
+  paid_at?: number
 }
 
 function shortAddr(a: string) {
+  if (!a) return ''
   return `${a.slice(0, 6)}…${a.slice(-4)}`
 }
 
 const STATUS_LABELS: Record<number, string> = {
-  0: 'Pending',
-  1: 'Paid',
+  0: 'Created',
+  1: 'Pending',
   2: 'Tokenized',
-  3: 'Cancelled',
-}
-const STATUS_COLORS: Record<number, string> = {
-  0: 'var(--warning)',
-  1: 'var(--success)',
-  2: '#1061a6',
-  3: 'var(--danger)',
+  3: 'Active',
+  4: 'Paid',
+  5: 'Defaulted',
+  6: 'Cancelled',
 }
 
-type PayTab = 'card' | 'crypto'
+const STATUS_COLORS: Record<number, string> = {
+  0: 'var(--warning)',
+  1: 'var(--warning)',
+  2: '#1061a6',
+  3: '#1061a6',
+  4: 'var(--success)',
+  5: 'var(--danger)',
+  6: 'var(--danger)',
+}
 
 export default function PaymentPage() {
   const { invoiceId } = useParams<{ invoiceId: string }>()
-  const idBigInt = invoiceId ? BigInt(invoiceId) : 0n
-  const { address } = useAccount()
-  const [tab, setTab] = useState<PayTab>('card')
-  const [moonpayVisible, setMoonpayVisible] = useState(false)
+  const { address, chainId } = useAccount()
+  const { switchChain } = useSwitchChain()
+  const publicClient = usePublicClient()
+  const wrongChain = chainId !== ARC_TESTNET_ID
 
-  const { data: inv, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: 'getInvoice',
-    args: [idBigInt],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: idBigInt > 0n },
-  }) as { data: Invoice | undefined; isLoading: boolean }
+  const [inv, setInv] = useState<ApiInvoice | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isPaying, setIsPaying] = useState(false)
+  const [paymentTxHash, setPaymentTxHash] = useState<string | null>(null)
+  const [isPollingStatus, setIsPollingStatus] = useState(false)
+  const [pollTimeoutReached, setPollTimeoutReached] = useState(false)
 
-  // ── Crypto pay flow ──
-  const { writeContract: approveWrite, data: approveTxHash } = useWriteContract()
-  const { writeContract: payWrite, data: payTxHash } = useWriteContract()
-  const { isLoading: approveLoading, isSuccess: approveSuccess } =
-    useWaitForTransactionReceipt({ hash: approveTxHash })
-  const { isLoading: payLoading, isSuccess: paySuccess, data: payReceipt } =
-    useWaitForTransactionReceipt({ hash: payTxHash })
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const pollCountRef = useRef(0)
 
-  const handleApprove = useCallback(() => {
-    if (!inv) return
-    approveWrite({
-      address: USDC_ADDRESS,
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [CONTRACT_ADDRESS, inv.amount],
-    })
-  }, [approveWrite, inv])
-
-  const handlePay = useCallback(() => {
-    if (!inv) return
-    payWrite({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: 'payInvoice',
-      args: [inv.id],
-    })
-  }, [payWrite, inv])
+  const fetchInvoice = useCallback(async () => {
+    if (!invoiceId) return
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`)
+      if (res.ok) {
+        const data = await res.json() as ApiInvoice
+        setInv(data)
+        if (data.status === 4 && data.payment_tx_hash && !paymentTxHash) {
+          setPaymentTxHash(data.payment_tx_hash)
+        }
+      } else {
+        setInv(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch invoice:', err)
+      setInv(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [invoiceId, paymentTxHash])
 
   useEffect(() => {
-    if (paySuccess) {
-      toast.success('Invoice paid! USDC sent to vendor.')
-    }
-  }, [paySuccess])
+    void fetchInvoice()
+  }, [fetchInvoice])
 
-  // ── MoonPay URL signing ──
-  const handleUrlSignatureRequested = useCallback(async (url: string): Promise<string> => {
-    try {
-      const res = await fetch(`/api/sign-moonpay?url=${encodeURIComponent(url)}`)
-      if (!res.ok) {
-        // No secret key configured — return empty string (widget works without sig in sandbox)
-        return ''
-      }
-      const data = await res.json() as { signature: string }
-      return data.signature
-    } catch {
-      return ''
+  // Stop polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
     }
   }, [])
+
+  const startPolling = useCallback(() => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+    pollCountRef.current = 0
+    setIsPollingStatus(true)
+    setPollTimeoutReached(false)
+
+    pollIntervalRef.current = setInterval(async () => {
+      pollCountRef.current += 1
+      if (!invoiceId) return
+
+      try {
+        const res = await fetch(`/api/invoices/${invoiceId}`)
+        if (res.ok) {
+          const data = await res.json() as ApiInvoice
+          setInv(data)
+          if (data.status === 4) {
+            // Settled! Stop polling
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+            setIsPollingStatus(false)
+            toast.success('Payment settled and confirmed!')
+            return
+          }
+        }
+      } catch (e) {
+        console.error('Polling error:', e)
+      }
+
+      // Max 12 polls (2 minutes at 10s intervals)
+      if (pollCountRef.current >= 12) {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+        setIsPollingStatus(false)
+        setPollTimeoutReached(true)
+      }
+    }, 10000)
+  }, [invoiceId])
+
+  const { writeContractAsync } = useWriteContract()
+
+  const handleDirectPayment = async () => {
+    if (!inv) return
+    if (wrongChain) {
+      switchChain({ chainId: ARC_TESTNET_ID })
+      return
+    }
+
+    setIsPaying(true)
+    try {
+      const recipient = inv.creator as `0x${string}`
+      const amountToTransfer = BigInt(inv.tagged_amount || inv.amount)
+
+      toast.info('Please confirm direct USDC payment in your wallet...')
+      const txHash = await writeContractAsync({
+        address: USDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [recipient, amountToTransfer],
+        chainId: ARC_TESTNET_ID,
+      })
+
+      setPaymentTxHash(txHash)
+      toast.info('Payment broadcasted! Waiting for block confirmation...')
+
+      if (publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+        if (receipt.status === 'reverted') {
+          toast.error('Transaction reverted on-chain.')
+          setIsPaying(false)
+          return
+        }
+      }
+
+      // Report payment to backend for instant update
+      try {
+        await fetch(`/api/invoices/${inv.id}/report-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tx_hash: txHash }),
+        })
+      } catch (err) {
+        console.error('Failed to report payment to backend:', err)
+      }
+
+      toast.success('USDC transfer confirmed on-chain!')
+      void fetchInvoice()
+      startPolling()
+
+    } catch (err) {
+      console.error('Payment failed:', err)
+      toast.error('Payment failed: ' + ((err as Error)?.message ?? String(err)))
+    } finally {
+      setIsPaying(false)
+    }
+  }
 
   if (!invoiceId) {
     return (
@@ -120,7 +212,19 @@ export default function PaymentPage() {
     )
   }
 
-  const moonpayApiKey = import.meta.env.VITE_MOONPAY_PUBLIC_KEY as string | undefined
+  const pdfData: InvoicePdfData | null = inv ? {
+    invoiceId: inv.id,
+    creator: inv.creator,
+    client: inv.client_address || '—',
+    clientEmail: inv.client_email || undefined,
+    amount: inv.amount,
+    amountFormatted: `${inv.amount_usdc.toFixed(2)} USDC`,
+    description: inv.description || '',
+    dueDate: inv.due_date,
+    paymentAddress: inv.creator,
+  } : null
+
+  const isPaid = inv?.status === 4 || !!paymentTxHash
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
@@ -130,7 +234,6 @@ export default function PaymentPage() {
         style={{
           background: 'rgba(10,10,10,0.92)',
           backdropFilter: 'blur(20px)',
-  
         }}
       >
         <Link
@@ -145,7 +248,7 @@ export default function PaymentPage() {
           <StrykLogo size={24} />
           <span className="display text-base font-bold tracking-tight" style={{ color: 'var(--ink)' }}>Veo</span>
         </div>
-        <div className="w-24 flex justify-end">
+        <div className="flex justify-end">
           <ConnectKitButton
             customTheme={{
               '--ck-font-family': "'Glacial Indifference', sans-serif",
@@ -159,237 +262,165 @@ export default function PaymentPage() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
-        {/* Invoice summary card */}
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="size-8 animate-spin" style={{ color: 'var(--accent)' }} />
           </div>
         ) : !inv ? (
-          <div
-            className="rounded-2xl p-8 text-center bg-[var(--surface)] border-0 shadow-xs"
-          >
-            <p style={{ color: 'var(--muted)' }}>Invoice #{invoiceId} not found.</p>
+          <div className="rounded-2xl p-8 text-center bg-[var(--surface)] border-0">
+            <p style={{ color: 'var(--muted)' }}>Invoice {invoiceId} not found.</p>
           </div>
         ) : (
           <>
-            {/* Summary */}
-            <div
-              className="rounded-2xl p-6 flex flex-col gap-4 bg-[var(--surface)] border-0 shadow-xs"
-            >
+            {/* Summary card */}
+            <div className="rounded-2xl p-6 flex flex-col gap-4 bg-[var(--surface)] border-0">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs mono font-bold mb-1" style={{ color: 'var(--subtle)' }}>
-                    INVOICE #{String(inv.id).padStart(4, '0')}
+                    INVOICE {inv.id}
                   </p>
                   <p className="display text-2xl font-bold" style={{ color: 'var(--ink)' }}>
-                    {formatUsdc(inv.amount)}
+                    {inv.amount_usdc.toFixed(2)}
                     <span className="text-base font-normal ml-1" style={{ color: 'var(--subtle)' }}>USDC</span>
                   </p>
                 </div>
                 <span
                   className="text-xs font-bold px-3 py-1 rounded-full"
                   style={{
-                    background: `${STATUS_COLORS[inv.status]}18`,
-                    color: STATUS_COLORS[inv.status],
+                    background: `${STATUS_COLORS[inv.status] || '#1061a6'}18`,
+                    color: STATUS_COLORS[inv.status] || '#1061a6',
                   }}
                 >
-                  {STATUS_LABELS[inv.status]}
+                  {STATUS_LABELS[inv.status] ?? 'Pending'}
                 </span>
               </div>
 
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>{inv.description}</p>
+              {inv.description && (
+                <p className="text-sm text-pretty" style={{ color: 'var(--ink-2)' }}>{inv.description}</p>
+              )}
+
+              {/* Tagged Amount Breakdown */}
+              <div className="rounded-xl p-3 bg-[var(--surface-strong)] flex flex-col gap-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1 font-medium" style={{ color: 'var(--muted)' }}>
+                    <Tag className="size-3.5 text-blue-500" />
+                    Direct Payment Amount:
+                  </span>
+                  <span className="mono font-bold" style={{ color: 'var(--ink)' }}>
+                    {inv.tagged_amount_usdc ? inv.tagged_amount_usdc.toFixed(6) : inv.amount_usdc.toFixed(6)} USDC
+                  </span>
+                </div>
+                <p className="text-[11px]" style={{ color: 'var(--subtle)' }}>
+                  Includes unique +{(inv.numeric_id ? inv.numeric_id / 1_000_000 : 0.000001).toFixed(6)} USDC micro-tag for automatic reconciliation.
+                </p>
+              </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-xl px-3 py-2.5 bg-[var(--surface-strong)] border-0">
-                  <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>From (Vendor)</p>
+                  <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>Recipient (Vendor)</p>
                   <a
-                    href={buildAddressExplorerUrl(ARC_TESTNET_ID, inv.vendor)}
+                    href={buildAddressExplorerUrl(ARC_TESTNET_ID, inv.creator)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mono font-semibold flex items-center gap-1"
                     style={{ color: 'var(--ink-2)' }}
                   >
-                    {shortAddr(inv.vendor)}
+                    {shortAddr(inv.creator)}
                     <ExternalLink className="size-3" style={{ color: 'var(--subtle)' }} />
                   </a>
                 </div>
                 <div className="rounded-xl px-3 py-2.5 bg-[var(--surface-strong)] border-0">
-                  <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>Due</p>
+                  <p className="mb-0.5" style={{ color: 'var(--subtle)' }}>Due Date</p>
                   <p className="font-semibold" style={{ color: 'var(--ink-2)' }}>
-                    {new Date(Number(inv.dueDate) * 1000).toLocaleDateString()}
+                    {new Date(inv.due_date * 1000).toLocaleDateString()}
                   </p>
                 </div>
               </div>
+
+              {pdfData && (
+                <div className="pt-1">
+                  <InvoiceDownloadButton data={pdfData} />
+                </div>
+              )}
             </div>
 
-            {/* Already paid */}
-            {inv.status === 1 && (
-              <div
-                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0 shadow-xs"
-              >
-                <CheckCircle className="size-10" style={{ color: 'var(--success)' }} />
-                <p className="display text-lg font-bold" style={{ color: 'var(--success)' }}>Invoice Paid</p>
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>This invoice has already been settled.</p>
-              </div>
-            )}
-
-            {/* Cancelled */}
-            {inv.status === 3 && (
-              <div
-                className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0 shadow-xs"
-              >
-                <p className="display text-lg font-bold" style={{ color: 'var(--danger)' }}>Invoice Cancelled</p>
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>This invoice has been cancelled by the vendor.</p>
-              </div>
-            )}
-
-            {/* Payment options */}
-            {(inv.status === 0 || inv.status === 2) && (
-              <div
-                className="rounded-2xl overflow-hidden bg-[var(--surface)] border-0 shadow-xs"
-              >
-                {/* Tabs */}
-                <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {[
-                    { id: 'card' as PayTab, label: 'Pay with Card', icon: <CreditCard className="size-4" /> },
-                    { id: 'crypto' as PayTab, label: 'Pay with Crypto', icon: <StrykLogo size={16} /> },
-                  ].map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTab(t.id)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all cursor-pointer"
-                      style={{
-                        background: tab === t.id ? '#2563EB' : 'transparent',
-                        color: tab === t.id ? '#ffffff' : 'var(--muted)',
-                        borderRight: t.id === 'card' ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                      }}
-                    >
-                      {t.icon}
-                      {t.label}
-                    </button>
-                  ))}
+            {/* Paid confirmation */}
+            {isPaid ? (
+              <div className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0">
+                <CheckCircle className="size-12" style={{ color: 'var(--success)' }} />
+                <div>
+                  <p className="display text-lg font-bold" style={{ color: 'var(--success)' }}>
+                    Invoice Paid & Settled
+                  </p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
+                    Payment of {(inv.tagged_amount_usdc ?? inv.amount_usdc).toFixed(6)} USDC received directly by vendor.
+                  </p>
                 </div>
+                {paymentTxHash && (
+                  <a
+                    href={buildTxExplorerUrl(ARC_TESTNET_ID, paymentTxHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-mono font-medium px-3 py-1.5 rounded-xl bg-[var(--surface-strong)]"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    Tx: {shortAddr(paymentTxHash)} <ExternalLink className="size-3" />
+                  </a>
+                )}
+              </div>
+            ) : inv.status === 6 ? (
+              <div className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-[var(--surface)] border-0">
+                <p className="display text-lg font-bold" style={{ color: 'var(--danger)' }}>Invoice Cancelled</p>
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>This invoice was cancelled by the vendor.</p>
+              </div>
+            ) : (
+              /* Pay Action Box */
+              <div className="rounded-2xl p-6 flex flex-col gap-4 bg-[var(--surface)] border-0">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-5 text-blue-600" />
+                  <p className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+                    Direct ERC-20 USDC Transfer
+                  </p>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                  One single transfer from your wallet directly to the vendor. No extra approvals or escrow contracts required.
+                </p>
 
-                {/* Card tab — MoonPay */}
-                {tab === 'card' && (
-                  <div className="p-6 flex flex-col gap-4">
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                      Pay with your debit/credit card. MoonPay converts your payment to USDC and
-                      sends it directly to the vendor's wallet on Arc Testnet.
-                    </p>
-                    <div
-                      className="rounded-xl p-3 flex items-start gap-3 text-xs"
-                      style={{ background: 'rgba(16,97,166,0.07)' }}
-                    >
-                      <CreditCard className="size-4 shrink-0 mt-0.5" style={{ color: '#1061a6' }} />
-                      <div style={{ color: '#1061a6' }}>
-                        <p className="font-semibold mb-0.5">How it works</p>
-                        <p>MoonPay charges your card in your local currency, converts to USDC, and sends {formatUsdc(inv.amount)} USDC directly to the vendor's wallet.</p>
-                      </div>
-                    </div>
-
-                    {!moonpayApiKey || moonpayApiKey === 'pk_test_YOUR_MOONPAY_PUBLIC_KEY' ? (
-                      <div
-                        className="rounded-xl p-4 text-sm text-center"
-                        style={{ background: 'rgba(196,123,0,0.08)', color: 'var(--warning)' }}
-                      >
-                        <p className="font-semibold mb-1">MoonPay API Key Required</p>
-                        <p>Add your MoonPay publishable key to <code className="mono text-xs px-1 py-0.5 rounded" style={{ background: 'rgba(196,123,0,0.12)' }}>.env</code> as <code className="mono text-xs">VITE_MOONPAY_PUBLIC_KEY</code> to enable card payments.</p>
-                      </div>
+                {!address ? (
+                  <div className="flex flex-col items-center gap-3 py-3">
+                    <p className="text-xs" style={{ color: 'var(--subtle)' }}>Connect wallet on Arc Testnet to pay</p>
+                    <ConnectKitButton />
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleDirectPayment}
+                    disabled={isPaying}
+                    className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer bg-[#2563EB] hover:bg-[#1D4ED8]"
+                  >
+                    {wrongChain ? (
+                      'Switch to Arc Testnet'
+                    ) : isPaying ? (
+                      <><Loader2 className="size-4 animate-spin" /> Confirming Payment...</>
                     ) : (
-                      <>
-                        <button
-                          onClick={() => setMoonpayVisible(true)}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
-                          style={{ background: '#2563EB', color: '#ffffff' }}
-                        >
-                          <CreditCard className="size-4" />
-                          Pay {formatUsdc(inv.amount)} with Card
-                        </button>
-                        <MoonPayBuyWidget
-                          variant="overlay"
-                          visible={moonpayVisible}
-                          currencyCode="usdc_eth"
-                          quoteCurrencyAmount={String(Number(inv.amount) / 1_000_000)}
-                          walletAddress={inv.vendor}
-                          lockAmount="true"
-                          onUrlSignatureRequested={handleUrlSignatureRequested}
-                          onCloseOverlay={() => setMoonpayVisible(false)}
-                        />
-                      </>
+                      <><ArrowRight className="size-4" /> Pay {(inv.tagged_amount_usdc ?? inv.amount_usdc).toFixed(6)} USDC Direct</>
                     )}
+                  </button>
+                )}
+
+                {isPollingStatus && (
+                  <div className="flex items-center justify-center gap-2 text-xs py-1" style={{ color: 'var(--muted)' }}>
+                    <Loader2 className="size-3.5 animate-spin text-blue-600" />
+                    <span>Verifying settlement on-chain...</span>
                   </div>
                 )}
 
-                {/* Crypto tab — wagmi USDC */}
-                {tab === 'crypto' && (
-                  <div className="p-6 flex flex-col gap-4">
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                      Pay directly with USDC from your connected wallet. You'll approve the amount and confirm the payment in two steps.
-                    </p>
-
-                    {!address ? (
-                      <div className="flex flex-col items-center gap-3 py-4">
-                        <p className="text-sm" style={{ color: 'var(--subtle)' }}>Connect your wallet to pay with crypto.</p>
-                        <ConnectKitButton
-                          customTheme={{
-                            '--ck-font-family': "'DM Sans', sans-serif",
-                            '--ck-primary-button-background': '#2563EB',
-                            '--ck-primary-button-hover-background': '#1D4ED8',
-                            '--ck-primary-button-color': '#ffffff',
-                          }}
-                        />
-                      </div>
-                    ) : paySuccess ? (
-                      <div className="flex flex-col items-center gap-3 py-6 text-center">
-                        <CheckCircle className="size-12" style={{ color: '#2563EB' }} />
-                        <p className="display text-lg font-bold" style={{ color: '#2563EB' }}>Payment Sent!</p>
-                        <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                          {formatUsdc(inv.amount)} USDC sent to vendor.
-                        </p>
-                        {payReceipt && (
-                          <a
-                            href={buildTxExplorerUrl(ARC_TESTNET_ID, payReceipt.transactionHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-medium"
-                            style={{ color: '#2563EB' }}
-                          >
-                            View transaction <ExternalLink className="size-3" />
-                          </a>
-                        )}
-                      </div>
-                    ) : !approveSuccess ? (
-                      <button
-                        onClick={handleApprove}
-                        disabled={approveLoading}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
-                        style={{
-                          background: '#2563EB',
-                          color: '#ffffff',
-                          opacity: approveLoading ? 0.6 : 1,
-                        }}
-                      >
-                        {approveLoading
-                          ? <><Loader2 className="size-4 animate-spin" /> Approving…</>
-                          : <><ArrowRight className="size-4" /> Approve {formatUsdc(inv.amount)} USDC</>}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handlePay}
-                        disabled={payLoading}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer"
-                        style={{
-                          background: '#2563EB',
-                          color: '#ffffff',
-                          opacity: payLoading ? 0.6 : 1,
-                        }}
-                      >
-                        {payLoading
-                          ? <><Loader2 className="size-4 animate-spin" /> Paying…</>
-                          : <><ArrowRight className="size-4" /> Confirm Payment</>}
-                      </button>
-                    )}
+                {pollTimeoutReached && (
+                  <div className="rounded-xl p-3 flex items-start gap-2 bg-yellow-500/10 text-yellow-600 text-xs">
+                    <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Payment Broadcasted</p>
+                      <p>Transaction received on-chain. Status will update within a few minutes.</p>
+                    </div>
                   </div>
                 )}
               </div>

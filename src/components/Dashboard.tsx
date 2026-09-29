@@ -13,28 +13,38 @@ import {
 } from 'lucide-react'
 import { INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
 
+import { useQuery } from '@tanstack/react-query'
+
 function useVendorStats(address?: `0x${string}`) {
-  const { data: vendorIds } = useReadContract({
-    address: INVOICE_CONTRACT.address,
-    abi: INVOICE_CONTRACT.abi,
-    functionName: 'getVendorInvoices',
-    args: [address ?? '0x0000000000000000000000000000000000000000'],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: !!address, refetchInterval: 10000 },
+  const { data } = useQuery({
+    queryKey: ['vendorInvoices', address],
+    queryFn: async () => {
+      if (!address) return []
+      const res = await fetch(`/api/invoices?creator=${address}`)
+      if (!res.ok) return []
+      const json = await res.json()
+      return (json.invoices ?? []) as any[]
+    },
+    enabled: !!address,
+    refetchInterval: 10000,
   })
-  return (vendorIds as bigint[] | undefined) ?? []
+  return data ?? []
 }
 
 function useClientStats(address?: `0x${string}`) {
-  const { data: clientIds } = useReadContract({
-    address: INVOICE_CONTRACT.address,
-    abi: INVOICE_CONTRACT.abi,
-    functionName: 'getClientInvoices',
-    args: [address ?? '0x0000000000000000000000000000000000000000'],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: !!address, refetchInterval: 10000 },
+  const { data } = useQuery({
+    queryKey: ['clientInvoices', address],
+    queryFn: async () => {
+      if (!address) return []
+      const res = await fetch(`/api/invoices?creator=${address}`)
+      if (!res.ok) return []
+      const json = await res.json()
+      return (json.invoices ?? []) as any[]
+    },
+    enabled: !!address,
+    refetchInterval: 10000,
   })
-  return (clientIds as bigint[] | undefined) ?? []
+  return data ?? []
 }
 
 interface Props {
@@ -88,16 +98,16 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
         {/* Card 1: Inverted Black Hero Card */}
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[20px] sm:rounded-[24px] bg-black text-white p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm cursor-pointer transition-transform active:scale-[0.99] group"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-black text-[var(--ink)] sm:text-white p-2.5 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Wallet className="size-3.5 text-neutral-300 shrink-0" />
-              <span className="text-xs sm:text-sm font-medium text-neutral-300 whitespace-nowrap truncate">
+              <Wallet className="size-3.5 text-[var(--muted)] sm:text-neutral-300 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-[var(--muted)] sm:text-neutral-300 whitespace-nowrap truncate">
                 Available to payout
               </span>
             </div>
-            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform">
+            <div className="size-6 sm:size-7 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
               <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </div>
           </div>
@@ -108,7 +118,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
             </span>
           </div>
 
-          <div className="whitespace-nowrap truncate text-[11px] font-medium text-neutral-400">
+          <div className="whitespace-nowrap truncate text-[11px] font-medium text-[var(--muted)] sm:text-neutral-400">
             Payout <span className="opacity-70">•</span> $6.1K available soon
           </div>
         </div>
@@ -116,7 +126,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
         {/* Card 2: Light Surface Card */}
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -144,7 +154,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
         {/* Card 3: Light Surface Card */}
         <div
           onClick={() => (onOpenHunt ? onOpenHunt(1n) : onNavigate('marketplace'))}
-          className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0 shadow-xs"
+          className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[110px] sm:min-h-[120px] cursor-pointer transition-transform active:scale-[0.99] group border-0"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -173,7 +183,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
       {/* ── Bottom Row: Invoicing Volume Bar Chart & Settlement Channels Matrix ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3">
         {/* Card 4: Invoicing Volume Bar Chart */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -213,7 +223,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
                     {/* Floating Pill Badge over Peak/Selected Bar */}
                     <div className="h-5 mb-1 flex items-center justify-center">
                       {isSelected && (
-                        <div className="px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] sm:text-[10px] font-extrabold tracking-wide shadow-xs animate-in fade-in duration-200">
+                        <div className="px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] sm:text-[10px] font-extrabold tracking-wide animate-in fade-in duration-200">
                           {item.val}
                         </div>
                       )}
@@ -223,7 +233,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
                     <div
                       className={`w-full max-w-[44px] rounded-[16px] sm:rounded-[18px] transition-all duration-300 ${
                         isSelected
-                          ? 'bg-[#2563EB] shadow-xs'
+                          ? 'bg-[#2563EB]'
                           : 'bg-[var(--surface-strong)] opacity-85 group-hover:opacity-100'
                       }`}
                       style={{ height: `${item.height}%` }}
@@ -256,7 +266,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
         </div>
 
         {/* Card 5: Settlement Channels Activity Matrix */}
-        <div className="rounded-[20px] sm:rounded-[24px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0 shadow-xs">
+        <div className="rounded-[20px] sm:rounded-[24px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 md:p-4 flex flex-col justify-between min-h-[220px] sm:min-h-[250px] border-0">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -313,7 +323,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         <div
           onClick={() => onNavigate('create')}
-          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -331,7 +341,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
 
         <div
           onClick={() => onNavigate('vendor')}
-          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -349,7 +359,7 @@ export default function Dashboard({ onNavigate, onOpenHunt }: Props) {
 
         <div
           onClick={() => (onOpenHunt ? onOpenHunt(1n) : onNavigate('marketplace'))}
-          className="rounded-[18px] sm:rounded-[22px] bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0 shadow-xs"
+          className="rounded-[18px] sm:rounded-[22px] bg-transparent sm:bg-[var(--surface)] text-[var(--ink)] p-3 sm:p-3.5 space-y-1 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] group border-0"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">

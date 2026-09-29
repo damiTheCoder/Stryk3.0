@@ -63,14 +63,12 @@ export function BarChart({
                 <span className="text-[10px] mono text-[var(--subtle)] w-10 text-right shrink-0 select-none">
                   {formatVal(Math.round(maxValue * lvl))}
                 </span>
-                <div className="w-full border-b border-dashed border-black/10 dark:border-white/10" />
               </div>
             ))}
             <div className="w-full flex items-center gap-2">
               <span className="text-[10px] mono text-[var(--subtle)] w-10 text-right shrink-0 select-none">
                 {formatVal(0)}
               </span>
-              <div className="w-full border-b border-black/15 dark:border-white/15" />
             </div>
           </div>
         )}
@@ -92,9 +90,9 @@ export function BarChart({
                 {/* Floating Tooltip */}
                 {isHovered && (
                   <div
-                    className="absolute -top-16 z-30 pointer-events-none transform -translate-x-1/2 left-1/2 min-w-[120px] rounded-xl p-2.5 shadow-xl border border-black/10 dark:border-white/10 bg-[var(--surface-strong)] backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95"
+                    className="absolute -top-16 z-30 pointer-events-none transform -translate-x-1/2 left-1/2 min-w-[120px] rounded-xl p-2.5 bg-[var(--surface-strong)] backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95"
                   >
-                    <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--ink)] mb-1 pb-1 border-b border-black/5 dark:border-white/5">
+                    <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--ink)] mb-1 pb-1">
                       <span>{item.label}</span>
                       {item.meta && <span className="text-[10px] text-[var(--muted)] font-normal">{item.meta}</span>}
                     </div>
@@ -130,7 +128,7 @@ export function BarChart({
                     className={cn(
                       'w-full rounded-t-md transition-all duration-300 relative',
                       isHovered
-                        ? 'bg-[var(--ink)] brightness-110 shadow-sm'
+                        ? 'bg-[var(--ink)] brightness-110'
                         : hoveredIndex !== null
                         ? 'bg-[var(--ink)] opacity-40'
                         : 'bg-[var(--ink)] opacity-85 hover:opacity-100'
@@ -144,7 +142,7 @@ export function BarChart({
                       className={cn(
                         'w-full rounded-t-md transition-all duration-300 relative',
                         isHovered
-                          ? 'bg-emerald-500 brightness-110 shadow-sm'
+                          ? 'bg-emerald-500 brightness-110'
                           : hoveredIndex !== null
                           ? 'bg-emerald-500 opacity-40'
                           : 'bg-emerald-500/80 hover:bg-emerald-500'
@@ -283,17 +281,6 @@ export function LineChart({
   return (
     <div className={cn('relative w-full flex flex-col font-sans select-none', className)}>
       <div className="relative w-full overflow-hidden" style={{ height }}>
-        {/* Subtle Horizontal Grid lines */}
-        {showGridLines && (
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-4">
-            {gridLevels.map((lvl) => (
-              <div key={lvl} className="w-full flex items-center gap-2">
-                <div className="w-full border-b border-dashed border-black/10 dark:border-white/10" />
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* SVG Drawing */}
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -361,13 +348,13 @@ export function LineChart({
         {/* Floating Tooltip */}
         {hoveredIndex !== null && points[hoveredIndex] && (
           <div
-            className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full min-w-[110px] rounded-xl p-2.5 shadow-xl border border-black/10 dark:border-white/10 bg-[var(--surface-strong)] backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95"
+            className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full min-w-[110px] rounded-xl p-2.5 bg-[var(--surface-strong)] backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95"
             style={{
               left: `${(points[hoveredIndex].x / svgWidth) * 100}%`,
               top: `${Math.max(12, (points[hoveredIndex].y / svgHeight) * 100 - 8)}%`,
             }}
           >
-            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[var(--ink)] mb-1 pb-0.5 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[var(--ink)] mb-1 pb-0.5">
               <span>{points[hoveredIndex].label}</span>
               {points[hoveredIndex].meta && (
                 <span className="text-[10px] text-[var(--muted)] font-normal">

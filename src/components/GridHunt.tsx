@@ -1,11 +1,11 @@
 /**
  * GridHunt — Interactive 2-Stage Tokenized Invoice Experience
- * Stage 1: Asset Detail View with real-time Line Chart, Live Metrics & "Buy Cointag" trigger
- * Stage 2: Hunting Page with 3D Character Card, Mystery Grid Boxes, Coordinate Reference Matrix,
- *          and Coordinate Tracking & Claim Input Bar.
+ * Stage 1: Asset Detail View with real-time Line Chart, Live Metrics & "Buy Cointag" / "Begin Hunt" triggers
+ * Stage 2: Hunting Page with 3D Character Card, 676-Box Mystery Grid, 26x26 Coordinate Reference Matrix,
+ *          and Coordinate Tracking & Real Merkle submitPair Claim Input Bar.
  */
-import { useState, useMemo } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi'
 import { toast } from 'sonner'
 import {
   Feather,
@@ -16,37 +16,61 @@ import {
   Copy,
   Check,
   ArrowLeft,
-  Sparkles,
+  ArrowRight,
+  Layers,
   Ticket,
   ChevronRight,
   TrendingUp,
   RefreshCw,
-  X,
   Target,
   Trophy,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
-import { STRYK_GRID_CONTRACT, STRYK_NFT_CONTRACT, INVOICE_CONTRACT, ARC_TESTNET_ID } from '../contractConfig'
+import {
+  INVOICE_MANAGER_CONTRACT,
+  COINTAG_MANAGER_CONTRACT,
+  GRID_MANAGER_CONTRACT,
+  COLLATERAL_MANAGER_CONTRACT,
+  CONTRACT_ADDRESSES,
+  ARC_TESTNET_ID,
+} from '../contractConfig'
 import { formatUsdc } from '@/onchain-money'
-import { LineChart } from './ui/chart'
+import { deriveCode } from '../lib/code'
+import { coordToLabel, labelToCoord, getMerkleProof } from '@/lib/tokenize'
+import PurchaseSuccessModal from './PurchaseSuccessModal'
+import CodeEntryModal from './CodeEntryModal'
+import { ChartAreaStep } from './ui/chart-area-step'
+import { GradientBlock } from './marketplace/GradientBlock'
 
-const GRID_ADDRESS = STRYK_GRID_CONTRACT.address
-const GRID_ABI = STRYK_GRID_CONTRACT.abi
+const ERC20_ABI = [
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+] as const
 
-// ── Coordinate Reference Table Matrix (10 rows x 5 columns) ─────────────────
-const COORDINATE_COLS = ['A', 'B', 'C', 'D', 'E'] as const
-type ColKey = typeof COORDINATE_COLS[number]
-
-const COORDINATE_MATRIX: Record<number, Record<ColKey, string>> = {
-  1:  { A: '66, 31', B: '65, 71', C: '97, 87', D: '15, 60', E: '61, 98' },
-  2:  { A: '41, 52', B: '58, 18', C: '02, 71', D: '85, 84', E: '96, 28' },
-  3:  { A: '78, 23', B: '23, 59', C: '77, 67', D: '68, 44', E: '95, 51' },
-  4:  { A: '18, 68', B: '61, 70', C: '81, 20', D: '58, 46', E: '85, 51' },
-  5:  { A: '18, 56', B: '61, 59', C: '61, 42', D: '62, 41', E: '15, 87' },
-  6:  { A: '73, 84', B: '50, 56', C: '93, 56', D: '71, 71', E: '57, 99' },
-  7:  { A: '31, 02', B: '08, 07', C: '19, 30', D: '28, 12', E: '10, 62' },
-  8:  { A: '01, 81', B: '05, 50', C: '47, 42', D: '49, 00', E: '64, 24' },
-  9:  { A: '22, 29', B: '68, 00', C: '09, 12', D: '66, 80', E: '37, 79' },
-  10: { A: '66, 94', B: '06, 35', C: '66, 03', D: '01, 40', E: '87, 58' },
+interface ReferencePairItem {
+  coordinate: number
+  pair_a: string
+  pair_b: string
+  pair_hash: string
 }
 
 // ── Chart Timeframe Data ────────────────────────────────────────────────────
@@ -143,97 +167,173 @@ const KNOWN_GRIDS_META: Record<string, {
     companyName: 'Horizon Health',
     invoiceRef: 'INV-2026-006',
     ticker: 'horizonhealth',
-    faceValue: 32000000000n, // $32,000 USDC
+    faceValue: 3200000000n, // $32,000 USDC
     cointag: 50000000n, // $50 USDC
     totalRevealed: 38,
     volume: '$1.45M USDC',
   },
 }
 
+
 export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: () => void }) {
   const { address } = useAccount()
+  const { writeContractAsync } = useWriteContract()
+  const publicClient = usePublicClient({ chainId: ARC_TESTNET_ID })
 
   const fallback = KNOWN_GRIDS_META[gridId.toString()] || {
     companyName: `Receivable #${gridId.toString()}`,
     invoiceRef: `INV-2026-${gridId.toString().padStart(3, '0')}`,
     ticker: `inv-${gridId.toString()}`,
     faceValue: 5000000000n,
-    cointag: 10000000n,
+    cointag: 15000000n,
     totalRevealed: 70,
     volume: '$300.0K USDC',
   }
 
-  // Contract data for realism
-  const { data: grid } = useReadContract({
-    address: GRID_ADDRESS,
-    abi: GRID_ABI,
-    functionName: 'getGrid',
-    args: [gridId],
-    chainId: ARC_TESTNET_ID,
-  })
-
-  const { data: nft } = useReadContract({
-    address: STRYK_NFT_CONTRACT.address,
-    abi: STRYK_NFT_CONTRACT.abi,
-    functionName: 'getInvoiceNFT',
-    args: [grid ? ((grid as readonly unknown[])[3] as bigint) : 0n],
-    chainId: ARC_TESTNET_ID,
-    query: { enabled: !!grid },
-  })
-
-  const { data: invoice } = useReadContract({
-    address: INVOICE_CONTRACT.address,
-    abi: INVOICE_CONTRACT.abi,
+  // 1. Invoice data from InvoiceManager
+  const { data: invoiceRaw } = useReadContract({
+    address: INVOICE_MANAGER_CONTRACT.address,
+    abi: INVOICE_MANAGER_CONTRACT.abi,
     functionName: 'getInvoice',
     args: [gridId],
     chainId: ARC_TESTNET_ID,
   })
 
-  const nftData = nft as { faceValue: bigint; invoiceRef: string } | undefined
-  const invoiceData = invoice as { id: bigint; vendor: string; client: string; amount: bigint; description: string; dueDate: bigint; status: number } | undefined
+  // 2. Global / custom CoinTag price
+  const { data: globalPriceRaw } = useReadContract({
+    address: COINTAG_MANAGER_CONTRACT.address,
+    abi: COINTAG_MANAGER_CONTRACT.abi,
+    functionName: 'globalCointagPrice',
+    chainId: ARC_TESTNET_ID,
+  })
+
+  // 3. Collateral Pool stats from CollateralManager
+  const { data: totalCollateralRaw } = useReadContract({
+    address: COLLATERAL_MANAGER_CONTRACT.address,
+    abi: COLLATERAL_MANAGER_CONTRACT.abi,
+    functionName: 'totalCollateral',
+    args: [gridId],
+    chainId: ARC_TESTNET_ID,
+  })
+
+  // 4. Grid reveal units from GridManager
+  const { data: boardUnitsClaimedRaw, refetch: refetchBoardUnitsClaimed } = useReadContract({
+    address: GRID_MANAGER_CONTRACT.address,
+    abi: GRID_MANAGER_CONTRACT.abi,
+    functionName: 'getBoardUnitsClaimed',
+    args: [gridId],
+    chainId: ARC_TESTNET_ID,
+  })
+
+  // 5. Access check from CoinTagManager / GridManager
+  const { data: hasAccessRaw, refetch: refetchAccess } = useReadContract({
+    address: COINTAG_MANAGER_CONTRACT.address,
+    abi: COINTAG_MANAGER_CONTRACT.abi,
+    functionName: 'hasAccess',
+    args: [address ?? '0x0000000000000000000000000000000000000000', gridId],
+    chainId: ARC_TESTNET_ID,
+    query: { enabled: !!address },
+  })
+
+  // 6. Game board completion check
+  const { data: isCompletedRaw, refetch: refetchCompleted } = useReadContract({
+    address: GRID_MANAGER_CONTRACT.address,
+    abi: GRID_MANAGER_CONTRACT.abi,
+    functionName: 'isCompleted',
+    args: [gridId],
+    chainId: ARC_TESTNET_ID,
+  })
+  const isBoardCompleted = Boolean(isCompletedRaw)
+
+  const invoice = invoiceRaw as {
+    id: bigint
+    creator: string
+    amount: bigint
+    stablecoin: string
+    dueDate: bigint
+    debtorRef: `0x${string}`
+    metadataURI: string
+    status: number
+  } | undefined
 
   // Unified dynamic tokenized invoice data
-  const invoiceRef = (nftData?.invoiceRef || invoiceData?.description || fallback.invoiceRef).trim()
-  const companyName = fallback.companyName
-  const displayTitle = `${companyName} • ${invoiceRef}`
+  const displayTitle = `Invoice #${gridId.toString()}`
+  const creatorAddress = invoice?.creator || '0x46A5956424A9543AEa584227ED667FD6b8EbD565'
+  const creatorShort = `${creatorAddress.slice(0, 6)}…${creatorAddress.slice(-4)}`
   const ticker = fallback.ticker
 
-  const faceValueRaw = nftData?.faceValue || invoiceData?.amount || (grid ? ((grid as readonly unknown[])[4] as bigint) : undefined) || fallback.faceValue
+  const faceValueRaw = invoice?.amount ?? fallback.faceValue
   const faceValueFormatted = formatUsdc(faceValueRaw)
   const faceValueNumeric = Number(faceValueRaw) / 1_000_000
 
-  const cointagRaw = (grid ? ((grid as readonly unknown[])[4] as bigint) : undefined) || fallback.cointag
+  const cointagRaw = (globalPriceRaw) ?? fallback.cointag
   const cointagFormatted = formatUsdc(cointagRaw)
   const cointagNumeric = Number(cointagRaw) / 1_000_000
 
-  const totalRevealed = (grid ? Number((grid as readonly unknown[])[6]) : undefined) ?? fallback.totalRevealed
-  const remainingCells = Math.max(1, 100 - totalRevealed)
+  const totalCollateralFormatted = formatUsdc((totalCollateralRaw) ?? faceValueRaw)
+
+  const totalRevealed = boardUnitsClaimedRaw !== undefined ? Number(boardUnitsClaimedRaw) : 0
+  const remainingCells = Math.max(0, 100 - totalRevealed)
+  const gridRevealText = totalRevealed >= 100 ? 'All units claimed (100/100)' : `${totalRevealed} / 100 Units Claimed`
+
+  // Stablecoin & Allowance
+  const ARC_USDC_ADDRESS = '0x3600000000000000000000000000000000000000' as const
+  const stablecoinAddr = (invoice?.stablecoin as `0x${string}`) || ARC_USDC_ADDRESS
+
+  const { data: allowanceRaw, refetch: refetchAllowance } = useReadContract({
+    address: stablecoinAddr,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [address ?? '0x0000000000000000000000000000000000000000', COINTAG_MANAGER_CONTRACT.address],
+    chainId: ARC_TESTNET_ID,
+    query: { enabled: !!address },
+  })
 
   // Views: 'asset-detail' | 'hunt'
-  const [currentView, setCurrentView] = useState<'asset-detail' | 'hunt'>('asset-detail')
+  const [currentView, setCurrentView] = useState<'asset-detail' | 'hunt'>(() => {
+    const saved = typeof window !== 'undefined' ? sessionStorage.getItem('gridhunt_initial_view') : null
+    if (saved === 'hunt') {
+      sessionStorage.removeItem('gridhunt_initial_view')
+      return 'hunt'
+    }
+    return 'asset-detail'
+  })
 
   // Asset detail state
   const [timeframe, setTimeframe] = useState<Timeframe>('1W')
-  const [hoveredPoint, setHoveredPoint] = useState<{ index: number; val: number } | null>(null)
   const [isStarred, setIsStarred] = useState(false)
   const [copied, setCopied] = useState(false)
 
   // Cointag purchase & Access Code state
   const [isBuying, setIsBuying] = useState(false)
   const [accessCodeModal, setAccessCodeModal] = useState(false)
-  const [purchasedCode, setPurchasedCode] = useState('HUNT-7823')
-  const [enteredCode, setEnteredCode] = useState('')
+  const [codeEntryModalOpen, setCodeEntryModalOpen] = useState(false)
+  const [isRepeatPurchase, setIsRepeatPurchase] = useState(false)
+  const [purchasedCode, setPurchasedCode] = useState(() => {
+    const savedCode = typeof window !== 'undefined' ? sessionStorage.getItem('gridhunt_code') : null
+    if (savedCode) {
+      sessionStorage.removeItem('gridhunt_code')
+      return savedCode
+    }
+    return address ? deriveCode(address, gridId) : 'CT-0000-0000-0000'
+  })
 
-  // Hunting Room State
-  const [walletValue, setWalletValue] = useState<number>(0.0)
-  const [claimedTokens, setClaimedTokens] = useState<number>(0)
-  const [revealedBoxes, setRevealedBoxes] = useState<Record<number, { isCodepair: boolean; value: string }>>({})
-  const [activeFoundCodepair, setActiveFoundCodepair] = useState<string | null>(null)
+  // Hunting Room Real State
+  const [boardPairs, setBoardPairs] = useState<ReferencePairItem[]>([])
+  const [boardLoading, setBoardLoading] = useState(false)
+  const [boardError, setBoardError] = useState<string | null>(null)
+
+  // Box reveal & Claim states (numeric coord indices 0..675)
+  const [revealedCoords, setRevealedCoords] = useState<Set<number>>(new Set())
+  const [highlightedCoord, setHighlightedCoord] = useState<number | null>(null)
+  const [claimedCoords, setClaimedCoords] = useState<Set<number>>(new Set())
+
+  // Claim Bar Inputs (Coordinate only)
   const [coordinateInput, setCoordinateInput] = useState('')
-  const [claimedCoordinates, setClaimedCoordinates] = useState<string[]>([])
-  const [lastMatchedCoord, setLastMatchedCoord] = useState<string | null>(null)
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [isRestoringPairs, setIsRestoringPairs] = useState(false)
 
-  const realContractAddress = STRYK_NFT_CONTRACT.address
+  const realContractAddress = CONTRACT_ADDRESSES.invoiceManager
   const contractAddressDisplay = `${realContractAddress.slice(0, 6)}...${realContractAddress.slice(-6)}`
 
   const copyContractAddress = () => {
@@ -243,131 +343,255 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // Handle "Buy Cointag" click
-  const handleBuyCointag = () => {
-    setIsBuying(true)
-    setTimeout(() => {
-      setIsBuying(false)
-      const generated = 'HUNT-7823'
-      setPurchasedCode(generated)
-      setAccessCodeModal(true)
-      toast.success('Cointag purchased! Hunt access code unlocked.')
-    }, 600)
-  }
-
-  // Handle Entering Code to Access Hunt
-  const handleUnlockHunt = () => {
-    const cleanEntered = enteredCode.trim().toUpperCase()
-    const cleanPurchased = purchasedCode.trim().toUpperCase()
-
-    if (cleanEntered === cleanPurchased || cleanEntered === 'HUNT-7823' || cleanEntered === '78, 23' || cleanEntered === 'A3') {
-      setAccessCodeModal(false)
-      setCurrentView('hunt')
-      toast.success('Code verified! Welcome to the Live Hunting Room.')
-    } else {
-      toast.error('Invalid access code. Please enter the code given: ' + purchasedCode)
+  // Fetch Reference Sheet from backend when entering 'hunt' view
+  const fetchReferenceSheet = useCallback(async () => {
+    setBoardLoading(true)
+    setBoardError(null)
+    try {
+      const res = await fetch(`/api/board/${gridId.toString()}/reference-sheet`)
+      if (!res.ok) {
+        throw new Error(`Failed to load reference sheet (${res.status})`)
+      }
+      const json = await res.json()
+      if (Array.isArray(json.pairs) && json.pairs.length > 0) {
+        setBoardPairs(json.pairs)
+      } else {
+        throw new Error('Reference sheet contains no pairs')
+      }
+    } catch (err: any) {
+      console.error('Error fetching reference sheet:', err)
+      setBoardError(err?.message || 'Failed to load reference sheet')
+    } finally {
+      setBoardLoading(false)
     }
-  }
+  }, [gridId])
 
-  // Mystery Box Config (4x4 = 16 Grid Boxes)
-  const mysteryBoxConfig = useMemo(() => {
-    return [
-      { id: 1, isTarget: false, clue: 'Cold (No signal)' },
-      { id: 2, isTarget: false, clue: 'Scanning…' },
-      { id: 3, isTarget: false, clue: 'Warm signal' },
-      { id: 4, isTarget: true,  clue: '78, 23' }, // Target codepair!
-      { id: 5, isTarget: false, clue: 'Weak beacon' },
-      { id: 6, isTarget: false, clue: 'Static noise' },
-      { id: 7, isTarget: false, clue: 'Closer…' },
-      { id: 8, isTarget: false, clue: 'Try North' },
-      { id: 9, isTarget: false, clue: 'Decoy node' },
-      { id: 10, isTarget: false, clue: 'Scanning…' },
-      { id: 11, isTarget: false, clue: 'Warm pulse' },
-      { id: 12, isTarget: false, clue: 'Frequency 88Hz' },
-      { id: 13, isTarget: false, clue: 'Try Sector A' },
-      { id: 14, isTarget: false, clue: 'Cold (No signal)' },
-      { id: 15, isTarget: false, clue: 'Decoy node' },
-      { id: 16, isTarget: false, clue: 'Near Sector 3' },
-    ]
-  }, [])
+  const pendingSessionPairs = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const stored = sessionStorage.getItem(`pending_pairs_${gridId.toString()}`)
+      if (stored) return JSON.parse(stored)
+    } catch {}
+    return null
+  }, [gridId, boardLoading, boardError])
 
-  // User clicks a mystery box
-  const handleBoxClick = (id: number) => {
-    if (revealedBoxes[id]) return
-
-    const box = mysteryBoxConfig.find(b => b.id === id)
-    if (!box) return
-
-    setRevealedBoxes(prev => ({
-      ...prev,
-      [id]: { isCodepair: box.isTarget, value: box.clue },
-    }))
-
-    if (box.isTarget) {
-      setActiveFoundCodepair('78, 23')
-      toast.success('🎯 TARGET FOUND! Codepair is 78, 23. Find it on the COORDINATE REFERENCE table!')
-    } else {
-      toast('Revealed: ' + box.clue, { icon: '🔍' })
-    }
-  }
-
-  // Handle Coordinate Submission
-  const handleSubmitCoordinate = (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const raw = coordinateInput.trim().toUpperCase()
-
-    if (!raw) {
-      toast.error('Please enter a coordinate (e.g. A3)')
-      return
-    }
-
-    // Normalizing coordinate, e.g. "A3" or "3A"
-    let col = ''
-    let row = ''
-    if (COORDINATE_COLS.includes(raw[0] as ColKey) && !isNaN(Number(raw.slice(1)))) {
-      col = raw[0]
-      row = raw.slice(1)
-    } else if (!isNaN(Number(raw.slice(0, -1))) && COORDINATE_COLS.includes(raw.slice(-1) as ColKey)) {
-      row = raw.slice(0, -1)
-      col = raw.slice(-1)
-    } else {
-      toast.error('Format coordinate as [Column][Row], e.g. A3 or B4')
-      return
-    }
-
-    const rowNum = Number(row)
-    if (rowNum < 1 || rowNum > 10 || !COORDINATE_COLS.includes(col as ColKey)) {
-      toast.error('Invalid coordinate range. Columns: A-E, Rows: 1-10')
-      return
-    }
-
-    const foundPairInMatrix = COORDINATE_MATRIX[rowNum]?.[col as ColKey]
-    const coordKey = `${col}${rowNum}`
-
-    if (claimedCoordinates.includes(coordKey)) {
-      toast.info(`Coordinate ${coordKey} has already been claimed!`)
-      return
-    }
-
-    // Check if it matches the active target codepair (78, 23)
-    if (foundPairInMatrix === '78, 23' || (activeFoundCodepair && foundPairInMatrix === activeFoundCodepair)) {
-      setClaimedCoordinates(prev => [...prev, coordKey])
-      setLastMatchedCoord(coordKey)
-      setWalletValue(prev => prev + faceValueNumeric)
-      setClaimedTokens(prev => prev + 1)
-      setCoordinateInput('')
-
-      toast.success(`🎉 TARGET ACQUIRED! Coordinate [${coordKey}] verified for ${displayTitle}! +$${faceValueFormatted} USDC claimed!`, {
-        duration: 5000,
+  const handleRestoreSessionPairs = async () => {
+    if (!pendingSessionPairs || !pendingSessionPairs.pairs) return
+    setIsRestoringPairs(true)
+    toast.info('Restoring reference sheet pairs to backend…')
+    try {
+      const res = await fetch(`/api/board/${gridId.toString()}/pairs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pairs: pendingSessionPairs.pairs }),
       })
-    } else {
-      toast.error(
-        `Coordinate ${coordKey} holds [${foundPairInMatrix}], which doesn't match target codepair ${activeFoundCodepair || '78, 23'}. Check the table!`
-      )
+      if (res.ok || res.status === 409) {
+        sessionStorage.removeItem(`pending_pairs_${gridId.toString()}`)
+        toast.success('Reference sheet pairs restored successfully!')
+        void fetchReferenceSheet()
+      } else {
+        const errText = await res.text()
+        toast.error(`Restore failed: ${errText}`)
+      }
+    } catch (err: any) {
+      toast.error(`Restore failed: ${err?.message || String(err)}`)
+    } finally {
+      setIsRestoringPairs(false)
     }
   }
 
-  // ── Prepare Data for shadcn LineChart ──────────────────────────────────────
+  useEffect(() => {
+    if (currentView === 'hunt') {
+      void fetchReferenceSheet()
+    }
+  }, [currentView, fetchReferenceSheet])
+
+  // Mapping lookup for 26x26 matrix display
+  const pairsByCoord = useMemo(() => {
+    const map = new Map<number, ReferencePairItem>()
+    for (const p of boardPairs) {
+      map.set(p.coordinate, p)
+    }
+    return map
+  }, [boardPairs])
+
+  const pairStringByCoord = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const p of boardPairs) {
+      map.set(p.coordinate, `${p.pair_a}, ${p.pair_b}`)
+    }
+    return map
+  }, [boardPairs])
+
+  // Handle "Buy Cointag" click
+  const handleBuyCointag = async () => {
+    if (!address) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    setIsBuying(true)
+    try {
+      const currentAllowance = (allowanceRaw) || 0n
+
+      if (currentAllowance < cointagRaw) {
+        toast.info('Approving USDC for CoinTag purchase…')
+        const approveTx = await writeContractAsync({
+          address: stablecoinAddr,
+          abi: ERC20_ABI,
+          functionName: 'approve',
+          args: [COINTAG_MANAGER_CONTRACT.address, cointagRaw],
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: approveTx })
+        }
+        await refetchAllowance()
+      }
+
+      toast.info('Purchasing CoinTag on-chain…')
+      const purchaseTx = await writeContractAsync({
+        address: COINTAG_MANAGER_CONTRACT.address,
+        abi: COINTAG_MANAGER_CONTRACT.abi,
+        functionName: 'purchaseCoinTag',
+        args: [gridId, cointagRaw],
+      })
+
+      // Only register the code if the on-chain transaction succeeded.
+      // A reverted purchase must not produce a stale code in the backend.
+      const receipt = publicClient
+        ? await publicClient.waitForTransactionReceipt({ hash: purchaseTx })
+        : null
+      if (receipt && receipt.status !== 'success') {
+        toast.error('CoinTag purchase failed on-chain. No code generated.')
+        return
+      }
+      if (!receipt) {
+        toast.error('Could not confirm the CoinTag purchase on-chain. Please try again.')
+        return
+      }
+
+      // Only now derive the code and POST to backend
+      const code = deriveCode(address, gridId)
+      setPurchasedCode(code)
+
+      // Register with backend. The backend re-verifies the tx on-chain
+      // (defense in depth), so a failed POST here is a soft error: the
+      // user HAS on-chain access and can still enter the hunt with the
+      // code shown in the modal.
+      try {
+        const registerRes = await fetch('/api/cointags/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invoiceId: Number(gridId),
+            userAddress: address,
+            code,
+            amount: cointagRaw.toString(),
+            txHash: purchaseTx,
+            blockNumber: Number(receipt.blockNumber),
+          }),
+        })
+        if (!registerRes.ok) {
+          console.warn('On-chain purchase succeeded but code registration failed.')
+          toast.warning('CoinTag purchased. Code could not be saved locally. The code is: ' + code)
+        }
+      } catch (e) {
+        console.warn('On-chain purchase succeeded but code registration failed:', e)
+        toast.warning('CoinTag purchased. Code could not be saved locally. The code is: ' + code)
+      }
+
+      await refetchAccess()
+      setIsRepeatPurchase(Boolean(hasAccessRaw))
+      setAccessCodeModal(true)
+      toast.success('CoinTag purchased successfully!')
+    } catch (err: any) {
+      console.error('CoinTag purchase failed:', err)
+      const msg = (err?.message || '').toLowerCase()
+      if (msg.includes('cancel') || msg.includes('reject') || msg.includes('denied')) {
+        toast.error('Transaction cancelled')
+      } else {
+        toast.error(err?.shortMessage || err?.message || 'Failed to purchase CoinTag')
+      }
+    } finally {
+      setIsBuying(false)
+    }
+  }
+
+  // Handle Box Click (0..675)
+  const handleBoxClick = (coord: number) => {
+    setRevealedCoords((prev) => {
+      const next = new Set(prev)
+      next.add(coord)
+      return next
+    })
+    setHighlightedCoord(coord)
+    const label = coordToLabel(coord)
+    setCoordinateInput(label)
+    toast.info(`Revealed pair at ${label}`)
+  }
+
+  // Handle Coordinate Submission via Backend Relayer
+  const handleSubmitPair = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!address) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    const cleanCoordStr = coordinateInput.trim().toUpperCase()
+    if (!cleanCoordStr) {
+      toast.error('Please specify a coordinate (e.g. B10)')
+      return
+    }
+
+    let coordNum: number
+    try {
+      coordNum = labelToCoord(cleanCoordStr)
+    } catch {
+      toast.error('Invalid coordinate format. Must be A1..Z26')
+      return
+    }
+
+    // CHECK 2: Reveal gate on submit
+    if (!revealedCoords.has(coordNum)) {
+      toast.error('You must reveal this coordinate first. Click a box to reveal its pair.')
+      return
+    }
+
+    setIsClaiming(true)
+    try {
+      const res = await fetch(`/api/board/${gridId.toString()}/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress: address,
+          coordinate: coordNum,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.win) {
+        toast.success(
+          `Unit claimed! ${formatUsdc(BigInt(data.netPayout))} USDC added to your wallet`
+        )
+        setClaimedCoords((prev) => new Set(prev).add(coordNum))
+        setCoordinateInput('')
+        if (refetchBoardUnitsClaimed) void refetchBoardUnitsClaimed()
+        if (refetchCompleted) void refetchCompleted()
+        void fetchReferenceSheet()
+      } else {
+        toast.error(data.reason ?? 'CPU not found')
+      }
+    } catch (err) {
+      console.error('Claim failed:', err)
+      toast.error('Claim failed. Please try again.')
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
+  // ── Prepare Data for Step Area Chart ─────────────────────────────────────
   const lineChartData = useMemo(() => {
     const labelsMap: Record<Timeframe, string[]> = {
       '1H': ['0m', '10m', '20m', '30m', '40m', '50m', '60m', '70m', '80m', '90m', '100m', 'Now'],
@@ -378,17 +602,26 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       'ALL': ['2023', 'Q1', 'Q2', 'Q3', 'Q4', '2024', 'Q1', 'Q2', 'Q3', 'Q4', '2025', 'Now'],
     }
     const currentLabels = labelsMap[timeframe]
-    const baseScale = cointagNumeric > 0 ? cointagNumeric / 100 : 0.1
+    // Anchor the series to the live invoice capitalisation (collateral pool
+    // total) so the last bar always sits at the current cap level.
+    const liveCapNumeric = totalCollateralRaw != null
+      ? Number(totalCollateralRaw) / 1_000_000
+      : faceValueNumeric
+    const mockPts = CHART_DATA[timeframe].points
+    const lastMock = mockPts[mockPts.length - 1] ?? 1
+    const anchor = liveCapNumeric > 0 && lastMock > 0
+      ? liveCapNumeric / lastMock
+      : (cointagNumeric > 0 ? cointagNumeric / 100 : 0.1)
 
-    return CHART_DATA[timeframe].points.map((val, idx) => {
-      const scaledVal = Number((val * baseScale).toFixed(2))
+    return mockPts.map((val, idx) => {
+      const scaledVal = Number((val * anchor).toFixed(2))
       return {
         label: currentLabels[idx] || `#${idx + 1}`,
         value: scaledVal,
-        meta: `Tag: $${scaledVal.toFixed(2)} USDC`,
+        meta: `Cap: $${scaledVal.toFixed(2)} USDC`,
       }
     })
-  }, [timeframe, cointagNumeric])
+  }, [timeframe, cointagNumeric, totalCollateralRaw, faceValueNumeric])
 
   return (
     <div className="w-full flex flex-col gap-3 font-sans pb-8 select-none">
@@ -411,88 +644,66 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          STAGE 1: ASSET DETAIL VIEW (No background, clean shadcn LineChart)
+          STAGE 1: ASSET DETAIL VIEW
       ═══════════════════════════════════════════════════════════════════════ */}
       {currentView === 'asset-detail' && (
         <div className="flex flex-col gap-4 animate-in fade-in duration-300 bg-transparent">
-          {/* ── Header Bar (Exact match to Image 1, NO bg) ── */}
+          {/* Header Bar */}
           <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-0">
             {/* Left: Avatar + Title + Icons + Subtitle */}
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Avatar with Verified Badge Overlay */}
               <div className="relative shrink-0">
-                <img
-                  src="/assets/musebook_avatar.png"
-                  alt="Asset Avatar"
-                  className="size-12 sm:size-14 rounded-full object-cover bg-neutral-800"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-                {/* Verified Badge Icon (Blue checkmark seal) */}
-                <div className="absolute -bottom-1 -right-1 size-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shadow-md">
-                  <Check className="size-3" strokeWidth={3} />
-                </div>
+                <GradientBlock seed={gridId} rounded="full" className="size-12 sm:size-14 shrink-0" />
               </div>
 
-              {/* Title & Metadata */}
               <div className="flex flex-col gap-1">
-                {/* Name & Social Icons Row */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-[var(--ink)] uppercase">
                     {displayTitle}
                   </h1>
 
-                  {/* Icon set matching Image 1: feather, tv, divider, globe, x, search, star */}
                   <div className="flex items-center gap-1.5 ml-1">
-                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs">
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
                       <Feather className="size-3" />
                     </span>
-
-                    <span className="size-5 rounded flex items-center justify-center bg-purple-500/15 text-purple-500 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer shadow-xs">
+                    <span className="size-5 rounded flex items-center justify-center bg-purple-500/15 text-purple-500 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer">
                       <Tv className="size-3" />
                     </span>
-
                     <span className="text-[var(--muted)] opacity-40 text-xs px-0.5">|</span>
-
                     <a
                       href="https://arc.network"
                       target="_blank"
                       rel="noreferrer"
-                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
                     >
                       <Globe className="size-3" />
                     </a>
-
                     <a
                       href="https://x.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
                     >
                       <span className="font-bold text-[10px] leading-none">𝕏</span>
                     </a>
-
-                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer shadow-xs">
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
                       <Search className="size-3" />
                     </span>
-
                     <button
                       type="button"
                       onClick={() => {
-                        setIsStarred(s => !s)
+                        setIsStarred((s) => !s)
                         toast.success(!isStarred ? 'Added to Watchlist!' : 'Removed from Watchlist')
                       }}
-                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-amber-500 transition-colors cursor-pointer shadow-xs"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-amber-500 transition-colors cursor-pointer"
                     >
                       <Star className={`size-3 ${isStarred ? 'text-amber-500 fill-amber-500' : ''}`} />
                     </button>
                   </div>
                 </div>
 
-                {/* Sub-row: ticker | timeframe | contract address + copy button */}
                 <div className="flex items-center gap-2 text-[11px] text-[var(--muted)] font-medium">
-                  <span className="lowercase font-semibold text-[var(--ink)]">{ticker}</span>
+                  <span className="font-semibold text-[var(--ink)]">{creatorShort}</span>
                   <span className="opacity-40">|</span>
                   <span>1w</span>
                   <span className="opacity-40">|</span>
@@ -508,10 +719,10 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </div>
             </div>
 
-            {/* Right: Market Cap & Price Stats (Matching Image 1, dynamic tokenized invoice data) */}
+            {/* Right: Invoice Cap & Price Stats */}
             <div className="flex items-center gap-6 md:gap-8 self-start md:self-center">
               <div className="flex flex-col items-start md:items-end">
-                <span className="text-[11px] font-medium text-[var(--muted)]">Market cap</span>
+                <span className="text-[11px] font-medium text-[var(--muted)]">Invoice Cap</span>
                 <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)]">
                   ${faceValueFormatted} USDC
                 </span>
@@ -526,9 +737,8 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
             </div>
           </div>
 
-          {/* ── Line Chart Beneath It (shadcn UI LineChart, NO bg) ── */}
+          {/* Line Chart */}
           <div className="bg-transparent text-[var(--ink)] p-0 sm:p-1 flex flex-col gap-3 border-0">
-            {/* Chart Controls & Timeframe Selector */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
@@ -538,8 +748,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                 <span className="text-xs text-[var(--muted)]">Past {timeframe}</span>
               </div>
 
-              {/* Timeframe Pills */}
-              <div className="flex items-center gap-1 bg-[var(--surface)] p-1 rounded-xl shadow-xs">
+              <div className="flex items-center gap-1 bg-[var(--surface)] p-1 rounded-xl">
                 {(['1H', '1D', '1W', '1M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                   <button
                     key={tf}
@@ -547,7 +756,7 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                     onClick={() => setTimeframe(tf)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       timeframe === tf
-                        ? 'bg-[#2563EB] text-white shadow-xs'
+                        ? 'bg-[#2563EB] text-white'
                         : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-strong)]'
                     }`}
                   >
@@ -557,42 +766,34 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </div>
             </div>
 
-            {/* shadcn UI LineChart Component */}
             <div className="w-full pt-1">
-              <LineChart
-                data={lineChartData}
-                height={240}
-                strokeColor="#2563EB"
-                fillGradient={true}
-                showGridLines={true}
-                showDots={true}
-                className="w-full"
+              <ChartAreaStep
+                data={lineChartData.map((p) => ({ label: p.label, value: p.value }))}
               />
             </div>
 
-            {/* Bottom Chart Metrics Row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-[var(--surface-strong)] text-xs">
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">24h Volume</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">{fallback.volume}</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">${totalCollateralFormatted} USDC</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Liquidity</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">${faceValueFormatted} USDC</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">${totalCollateralFormatted} USDC</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Grid Reveal</span>
-                <p className="font-bold text-[var(--ink)] mt-0.5">{totalRevealed} / 100 Cells (1 in {remainingCells})</p>
+                <p className="font-bold text-[var(--ink)] mt-0.5">{gridRevealText}</p>
               </div>
               <div>
                 <span className="text-[10px] text-[var(--muted)] uppercase font-semibold">Contract Standard</span>
-                <p className="font-bold text-[#2563EB] dark:text-[#60A5FA] mt-0.5">Arc ERC-721 + StrykGrid</p>
+                <p className="font-bold text-[#2563EB] dark:text-[#60A5FA] mt-0.5">Arc ERC-721 + GridManager</p>
               </div>
             </div>
           </div>
 
-          {/* ── Prominent "Buy Cointag" Button Section (NO bg) ── */}
-          <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-0">
+          {/* Prominent "Begin Hunt" & "Buy Cointag" Action Row */}
+          <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col gap-4 border-0">
             <div className="flex flex-col gap-0.5 text-center sm:text-left">
               <span className="text-base sm:text-lg font-bold text-[var(--ink)]">
                 Enter the Live Coordinate Hunt
@@ -602,295 +803,283 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={handleBuyCointag}
-              disabled={isBuying}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-sm tracking-wide shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
-            >
-              <Ticket className="size-4" />
-              <span>{isBuying ? 'Purchasing Cointag…' : `Buy Cointag • ${cointagFormatted} USDC`}</span>
-              <ChevronRight className="size-4 ml-1" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Cointag Purchase & Code Reveal Modal ── */}
-      {accessCodeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-[24px] bg-[#0c0d12] text-white p-6 shadow-2xl border border-neutral-800 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="size-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <Sparkles className="size-4" />
-                </span>
-                <h3 className="text-lg font-black tracking-tight text-white">Cointag Purchased!</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAccessCodeModal(false)}
-                className="size-7 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            {/* Generated Code Announcement */}
-            <p className="text-xs text-neutral-300 leading-relaxed">
-              Your cointag has been minted. Here is your private hunting room access code. Enter it below to unlock the Live Hunt page:
-            </p>
-
-            {/* Code Box */}
-            <div className="p-3.5 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between gap-2">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-neutral-400 uppercase font-semibold">Your Access Code</span>
-                <span className="font-mono text-xl font-black text-emerald-400 tracking-wider">
-                  {purchasedCode}
-                </span>
-              </div>
+            <div className="flex items-center gap-3 w-full">
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(purchasedCode)
-                  setEnteredCode(purchasedCode)
-                  toast.success('Access code copied and auto-filled!')
+                  setCodeEntryModalOpen(true)
                 }}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                className="flex-1 h-12 min-w-0 px-4 sm:px-5 rounded-xl bg-[#F3F4F6] dark:bg-[#232323] hover:bg-black/5 dark:hover:bg-white/5 text-[var(--ink)] font-bold text-xs sm:text-sm tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Copy className="size-3.5" />
-                <span>Auto-Fill</span>
+                <Layers className="size-4 shrink-0 text-[#2563EB]" />
+                <span className="truncate">Begin Hunt</span>
               </button>
-            </div>
 
-            {/* Code Entry Input Bar */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="hunt-code-input" className="text-xs font-semibold text-neutral-300">
-                Enter Code to Access Hunting Page
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="hunt-code-input"
-                  type="text"
-                  value={enteredCode}
-                  onChange={(e) => setEnteredCode(e.target.value)}
-                  placeholder={`e.g. ${purchasedCode}`}
-                  className="flex-1 h-11 px-3 rounded-xl bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
-                />
-                <button
-                  type="button"
-                  onClick={handleUnlockHunt}
-                  className="h-11 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
-                >
-                  Enter Hunt →
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleBuyCointag}
+                disabled={isBuying}
+                className="flex-1 h-12 min-w-0 px-4 sm:px-5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs sm:text-sm tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Ticket className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{isBuying ? 'Purchasing Cointag…' : `Buy Cointag • ${cointagFormatted} USDC`}</span>
+                <ChevronRight className="size-4 shrink-0" />
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── Modals ── */}
+      <PurchaseSuccessModal
+        isOpen={accessCodeModal}
+        onClose={() => setAccessCodeModal(false)}
+        onBeginHunt={() => {
+          setAccessCodeModal(false)
+          setCurrentView('hunt')
+        }}
+        invoiceId={gridId}
+        code={purchasedCode}
+        isRepeatPurchase={isRepeatPurchase}
+      />
+
+      <CodeEntryModal
+        isOpen={codeEntryModalOpen}
+        onClose={() => setCodeEntryModalOpen(false)}
+        onSuccess={() => {
+          setCurrentView('hunt')
+          toast.success('Access code verified! Welcome to the Live Hunt.')
+        }}
+        invoiceId={gridId}
+        userAddress={address}
+        hasOnchainAccess={Boolean(hasAccessRaw)}
+      />
+
       {/* ═══════════════════════════════════════════════════════════════════════
-          STAGE 2: THE HUNTING PAGE DESIGN (Matching Second Image)
+          STAGE 2: THE HUNTING PAGE DESIGN (676-Box Mystery Grid + 26x26 Reference Sheet)
       ═══════════════════════════════════════════════════════════════════════ */}
       {currentView === 'hunt' && (
         <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-          {/* ── Top Header (Exact match to Image 2) ── */}
-          <div className="flex items-center justify-between gap-4 p-2 sm:p-3">
-            {/* Left: Avatar + Title + Status */}
-            <div className="flex items-center gap-3">
-              <div className="size-11 sm:size-12 rounded-full overflow-hidden bg-[#B5F22C] flex items-center justify-center shrink-0 border-2 border-black shadow-xs">
-                <img
-                  src="/assets/nova_character.png"
-                  alt={`${displayTitle} Avatar`}
-                  className="size-full object-cover scale-150"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
+          {/* Header Bar (Same design as Asset Detail) */}
+          <div className="bg-transparent text-[var(--ink)] p-1 sm:p-2 flex flex-col md:flex-row md:items-center justify-between gap-4 border-0">
+            {/* Left: Avatar + Title + Icons + Subtitle */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="relative shrink-0">
+                <GradientBlock seed={gridId} rounded="full" className="size-12 sm:size-14 shrink-0" />
               </div>
 
-              <div className="flex flex-col">
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-[var(--ink)]">
-                  {displayTitle}
-                </h2>
-                <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] font-medium">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live Hunt</span>
-                  <span>•</span>
-                  <span>Cycle 1</span>
-                  <span>•</span>
-                  <span>{claimedTokens} tokens claimed</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-[var(--ink)] uppercase">
+                    {displayTitle}
+                  </h1>
+
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
+                      <Feather className="size-3" />
+                    </span>
+                    <span className="size-5 rounded flex items-center justify-center bg-purple-500/15 text-purple-500 dark:text-purple-300 hover:opacity-80 transition-opacity cursor-pointer">
+                      <Tv className="size-3" />
+                    </span>
+                    <span className="text-[var(--muted)] opacity-40 text-xs px-0.5">|</span>
+                    <a
+                      href="https://arc.network"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+                    >
+                      <Globe className="size-3" />
+                    </a>
+                    <a
+                      href="https://x.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+                    >
+                      <span className="font-bold text-[10px] leading-none">𝕏</span>
+                    </a>
+                    <span className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
+                      <Search className="size-3" />
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStarred((s) => !s)
+                        toast.success(!isStarred ? 'Added to Watchlist!' : 'Removed from Watchlist')
+                      }}
+                      className="size-5 rounded flex items-center justify-center bg-[var(--surface)] text-[var(--muted)] hover:text-amber-500 transition-colors cursor-pointer"
+                    >
+                      <Star className={`size-3 ${isStarred ? 'text-amber-500 fill-amber-500' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-[var(--muted)] font-medium">
+                  <span className="font-semibold text-[var(--ink)]">{creatorShort}</span>
+                  <span className="opacity-40">|</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-emerald-500 font-semibold">Live Hunt ({totalRevealed}/100 claimed)</span>
+                  </div>
+                  <span className="opacity-40">|</span>
+                  <button
+                    type="button"
+                    onClick={copyContractAddress}
+                    className="flex items-center gap-1 font-mono text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+                  >
+                    <span>{contractAddressDisplay}</span>
+                    {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Right: WALLET VALUE Card (Exact match to Image 2) */}
-            <div className="rounded-[16px] sm:rounded-[20px] bg-[#0c0d12] p-2.5 sm:p-3 px-4 sm:px-6 flex flex-col items-start min-w-[140px] sm:min-w-[170px] border border-neutral-900 shadow-sm">
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                WALLET VALUE
-              </span>
-              <span className="text-xl sm:text-2xl font-black text-[#10B981] font-mono tracking-tight mt-0.5">
-                ${walletValue.toFixed(6)}
-              </span>
+            {/* Right: Invoice Cap & Cointag Price Stats */}
+            <div className="flex items-center gap-6 md:gap-8 self-start md:self-center">
+              <div className="flex flex-col items-start md:items-end">
+                <span className="text-[11px] font-medium text-[var(--muted)]">Invoice Cap</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-[var(--ink)]">
+                  ${faceValueFormatted} USDC
+                </span>
+              </div>
+
+              <div className="flex flex-col items-start md:items-end">
+                <span className="text-[11px] font-medium text-[var(--muted)]">Cointag Price</span>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-[#2563EB] dark:text-[#60A5FA] font-mono">
+                  ${cointagFormatted} USDC
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* ── Main Two-Column Layout (Matching Image 2) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {/* ── LEFT COLUMN: 3D Artwork Card + Interactive Mystery Grid Boxes ── */}
-            <div className="flex flex-col gap-3">
-              {/* Vibrant Lime Green 3D Character Card */}
-              <div className="relative rounded-[22px] sm:rounded-[26px] overflow-hidden bg-[#B5F22C] shadow-sm flex flex-col">
-                <div className="aspect-[4/3] sm:aspect-square w-full relative flex items-center justify-center p-3">
-                  <img
-                    src="/assets/nova_character.png"
-                    alt={`${displayTitle} Character`}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-
-                {/* Bottom Banner Title */}
-                <div className="bg-[#121318] px-4 py-3 sm:py-3.5 text-white">
-                  <h3 className="text-base sm:text-lg font-black tracking-tight">
-                    {displayTitle}
-                  </h3>
-                </div>
-              </div>
-
-              {/* ── Interactive Grid Boxes ── */}
-              <div className="rounded-[20px] sm:rounded-[24px] bg-[#0c0d12] text-white p-3.5 sm:p-4 border border-neutral-900 shadow-sm flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Target className="size-4 text-emerald-400" />
-                    <span className="text-xs sm:text-sm font-bold text-white">
-                      Click Mystery Boxes to Reveal Codepair
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-neutral-400 font-mono">16 Sectors</span>
-                </div>
-
-                {/* Found Codepair Banner */}
-                {activeFoundCodepair ? (
-                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-600/40 flex items-center justify-between gap-2 animate-in zoom-in-95 duration-200">
-                    <div className="flex items-center gap-2">
-                      <span className="size-6 rounded-full bg-emerald-500 text-black flex items-center justify-center font-black text-xs">
-                        ✓
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-emerald-300">
-                          TARGET CODEPAIR FOUND:{' '}
-                          <span className="font-mono text-sm text-white underline decoration-emerald-400 decoration-2">
-                            {activeFoundCodepair}
-                          </span>
-                        </p>
-                        <p className="text-[10px] text-emerald-400/80">
-                          Locate this pair in the table on the right and submit coordinates below!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-[11px] text-neutral-400">
-                    💡 Click the sectors below to uncover the target codepair.
-                  </div>
-                )}
-
-                {/* 4x4 Grid Boxes */}
-                <div className="grid grid-cols-4 gap-2">
-                  {mysteryBoxConfig.map((box) => {
-                    const isRevealed = !!revealedBoxes[box.id]
-                    const revealedData = revealedBoxes[box.id]
-
-                    return (
-                      <button
-                        key={box.id}
-                        type="button"
-                        onClick={() => handleBoxClick(box.id)}
-                        className={`aspect-square rounded-xl p-1.5 flex flex-col items-center justify-center text-center transition-all duration-200 cursor-pointer ${
-                          !isRevealed
-                            ? 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 active:scale-95 text-neutral-400 hover:text-white'
-                            : revealedData.isCodepair
-                            ? 'bg-[#10B981] text-black border-2 border-white shadow-lg animate-pulse font-black'
-                            : 'bg-white/5 border border-white/10 text-neutral-400'
-                        }`}
-                      >
-                        {!isRevealed ? (
-                          <>
-                            <span className="text-[9px] font-mono text-neutral-500">#{box.id}</span>
-                            <span className="text-xs font-black mt-0.5">?</span>
-                          </>
-                        ) : revealedData.isCodepair ? (
-                          <>
-                            <span className="text-[8px] uppercase font-bold text-black/80">TARGET</span>
-                            <span className="font-mono text-xs sm:text-sm font-black">{revealedData.value}</span>
-                          </>
-                        ) : (
-                          <span className="text-[9px] font-medium leading-tight">{revealedData.value}</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
+          {/* Completion Banner if finished */}
+          {isBoardCompleted && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center gap-3">
+              <Trophy className="size-5 shrink-0" />
+              <p className="text-xs sm:text-sm font-semibold">
+                This game board has completed all 100 units! All collateral has been unlocked and claimed.
+              </p>
             </div>
+          )}
 
-            {/* ── RIGHT COLUMN: COORDINATE REFERENCE Table (Exact match to Image 2) ── */}
-            <div className="rounded-[22px] sm:rounded-[26px] bg-[#121318] text-white p-4 sm:p-5 flex flex-col gap-3 shadow-md border border-neutral-900">
-              {/* Header Title (Exact match to Image 2) */}
-              <div className="flex items-center justify-between pb-1 border-b border-neutral-800">
-                <h3 className="text-xs sm:text-sm font-extrabold tracking-wider text-neutral-300 uppercase">
-                  COORDINATE REFERENCE
-                </h3>
-                <span className="text-[10px] text-neutral-400 font-mono">10 x 5 Matrix</span>
+          {/* ═══════════════════════════════════════════════════════════════════════
+              VERTICAL STACKED LAYOUT
+          ═══════════════════════════════════════════════════════════════════════ */}
+
+          {/* ── ROW 2: Reference Sheet (26 × 26 Frozen-Header Grid) ── */}
+          <div className="bg-transparent text-neutral-900 dark:text-white flex flex-col gap-3 w-full">
+            {/* Board Loading / Error / Table States */}
+            {boardLoading && (
+              <div className="flex flex-col items-center justify-center py-12 gap-2 text-neutral-500 dark:text-neutral-400">
+                <Loader2 className="size-6 animate-spin text-emerald-400" />
+                <span className="text-xs font-medium">Loading 676 coordinate pairs from backend…</span>
               </div>
+            )}
 
-              {/* Coordinates Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-center border-collapse">
-                  <thead>
-                    <tr className="text-neutral-400 text-xs sm:text-sm font-bold">
-                      <th className="py-2 px-1 w-7 text-center"> </th>
-                      {COORDINATE_COLS.map((col) => (
-                        <th key={col} className="py-2 px-2 text-center text-neutral-400 font-bold">
+            {boardError && !boardLoading && (
+              <div className="p-5 sm:p-6 rounded-2xl bg-rose-950/40 border border-rose-800/40 flex flex-col items-center gap-3 text-center text-xs text-rose-300">
+                <AlertTriangle className="size-6 text-rose-400 shrink-0" />
+                <div className="space-y-2 max-w-lg">
+                  <p className="font-bold text-sm text-rose-200">
+                    Reference sheet not stored for this invoice.
+                  </p>
+                  <p className="text-neutral-300 leading-relaxed text-xs">
+                    This happens when the pairs weren't saved to the backend during tokenization. If you recently tokenized this invoice, try:
+                  </p>
+                  <ol className="text-left text-neutral-300 space-y-1.5 pl-5 list-decimal text-xs bg-black/20 p-3 rounded-xl border border-white/5">
+                    <li>Click <strong>Retry</strong> below to re-request the reference sheet.</li>
+                    <li>If retry fails, the pairs are lost — you'll need to tokenize a new invoice to test the hunt.</li>
+                  </ol>
+                </div>
+                <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+                  {pendingSessionPairs && (
+                    <button
+                      type="button"
+                      disabled={isRestoringPairs}
+                      onClick={handleRestoreSessionPairs}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1.5 cursor-pointer text-xs disabled:opacity-50"
+                    >
+                      {isRestoringPairs ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="size-3.5" />
+                      )}
+                      <span>Restore Pairs from Session</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={fetchReferenceSheet}
+                    className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold flex items-center gap-1.5 cursor-pointer text-xs"
+                  >
+                    <RefreshCw className="size-3.5" />
+                    <span>Retry</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!boardLoading && !boardError && (
+              <div className="overflow-x-auto overflow-y-auto max-h-[440px] border border-neutral-200 dark:border-neutral-800 rounded-xl bg-[#F3F4F6] dark:bg-[#232323]">
+                <table className="w-full text-center border-separate border-spacing-0 text-xs">
+                  <thead className="sticky top-0 z-20 bg-[#F3F4F6] dark:bg-[#232323]">
+                    <tr className="text-neutral-500 dark:text-neutral-400 font-bold">
+                      <th className="py-2.5 px-2 text-center w-9 sticky top-0 left-0 z-30 bg-[#F3F4F6] dark:bg-[#232323] border-b border-r border-neutral-200 dark:border-neutral-800 font-mono text-[11px]">
+                        #
+                      </th>
+                      {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((col) => (
+                        <th
+                          key={col}
+                          className="py-2.5 px-2 text-center text-neutral-500 dark:text-neutral-400 font-mono font-bold min-w-[62px] border-b border-r border-neutral-200/80 dark:border-neutral-800/80 bg-[#F3F4F6] dark:bg-[#232323]"
+                        >
                           {col}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(COORDINATE_MATRIX).map(([rowStr, cols]) => {
-                      const rowNum = Number(rowStr)
+                    {Array.from({ length: 26 }, (_, r) => {
+                      const rowNum = r + 1
                       return (
-                        <tr key={rowNum} className="border-t border-neutral-800/40 hover:bg-white/[0.02]">
-                          {/* Row Index on Left (1 to 10) */}
-                          <td className="py-1.5 sm:py-2 px-1 text-neutral-400 text-xs sm:text-sm font-bold">
+                        <tr key={rowNum} className="hover:bg-black/[0.03] dark:hover:bg-white/[0.02]">
+                          <td className="py-2 px-1.5 text-neutral-500 dark:text-neutral-400 font-mono font-bold sticky left-0 z-10 bg-[#F3F4F6] dark:bg-[#232323] border-b border-r border-neutral-200 dark:border-neutral-800 text-[11px]">
                             {rowNum}
                           </td>
+                          {Array.from({ length: 26 }, (_, c) => {
+                            const colLetter = String.fromCharCode(65 + c)
+                            const coord = c * 26 + r
+                            const label = `${colLetter}${rowNum}`
+                            const pair = pairsByCoord.get(coord)
+                            const isClaimed = claimedCoords.has(coord)
+                            const isHighlighted = highlightedCoord === coord
 
-                          {/* Columns A to E */}
-                          {COORDINATE_COLS.map((col) => {
-                            const val = cols[col]
-                            const coordKey = `${col}${rowNum}`
-                            const isClaimed = claimedCoordinates.includes(coordKey)
-                            const isCurrentMatch = lastMatchedCoord === coordKey
+                            const fullPair = pair
+                              ? `Pair A: ${pair.pair_a}\nPair B: ${pair.pair_b}`
+                              : 'Loading…'
 
                             return (
                               <td
-                                key={col}
-                                onClick={() => {
-                                  setCoordinateInput(coordKey)
-                                  toast.info(`Selected coordinate ${coordKey} (${val})`)
-                                }}
-                                className={`py-1.5 sm:py-2 px-2 font-mono text-xs sm:text-[13px] tracking-tight transition-all cursor-pointer rounded-lg ${
-                                  isClaimed || isCurrentMatch
-                                    ? 'bg-[#10B981] text-black font-black shadow-md'
-                                    : 'text-neutral-300 hover:text-white hover:bg-white/10'
+                                key={colLetter}
+                                className={`py-2 px-1 font-mono text-[10px] tracking-tight border-b border-r border-neutral-200 dark:border-neutral-800/30 transition-colors whitespace-nowrap ${
+                                  isHighlighted
+                                    ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/50'
+                                    : isClaimed
+                                    ? 'bg-[#10B981]/25 text-emerald-400 font-bold'
+                                    : 'bg-[#F3F4F6] dark:bg-[#232323] text-neutral-600 dark:text-neutral-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                                 }`}
-                                title={`Coordinate ${coordKey}: ${val}`}
+                                title={`${label}\n${fullPair}`}
                               >
-                                {val}
+                                <span
+                                  className={`font-mono text-[10px] whitespace-nowrap leading-none ${
+                                    isHighlighted
+                                      ? 'text-emerald-200 font-bold'
+                                      : isClaimed
+                                      ? 'text-emerald-300 font-bold'
+                                      : 'text-neutral-600 dark:text-neutral-300'
+                                  }`}
+                                >
+                                  {pair ? `${pair.pair_a}, ${pair.pair_b}` : '—'}
+                                </span>
                               </td>
                             )
                           })}
@@ -900,36 +1089,104 @@ export default function GridHunt({ gridId, onBack }: { gridId: bigint; onBack: (
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
 
-              {/* ── Coordinate Input & Claim Bar ── */}
-              <form
-                onSubmit={handleSubmitCoordinate}
-                className="mt-2 pt-3 border-t border-neutral-800 flex flex-col sm:flex-row items-center gap-2"
+          {/* ── ROW 3: 676-Box Mystery Grid (Strips of 7, 97 Columns) ── */}
+          <div className="rounded-[20px] sm:rounded-[24px] bg-[#F3F4F6] dark:bg-[#232323] text-neutral-900 dark:text-white p-3.5 sm:p-4 border border-neutral-200 dark:border-neutral-900 flex flex-col gap-3 w-full">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Target className="size-4 text-emerald-400" />
+                <span className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white">
+                  Mystery Box Grid (676 Sectors)
+                </span>
+              </div>
+              <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
+                {revealedCoords.size} Revealed • 97 Columns
+              </span>
+            </div>
+
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              Click any mystery box to reveal its coordinate pair. Match it in the reference matrix above to find its coordinate.
+            </p>
+
+            {/* 676 Box CSS Grid */}
+            <div className="overflow-x-auto pb-2 custom-scrollbar">
+              <div
+                className="grid gap-1.5"
+                style={{
+                  gridTemplateRows: 'repeat(7, 34px)',
+                  gridAutoFlow: 'column',
+                }}
               >
-                <div className="relative flex-1 w-full">
+                {Array.from({ length: 676 }, (_, coord) => {
+                  const isClaimed = claimedCoords.has(coord)
+                  const isRevealed = revealedCoords.has(coord) || isClaimed
+                  const pair = pairsByCoord.get(coord)
+
+                  return (
+                    <button
+                      key={coord}
+                      type="button"
+                      onClick={() => handleBoxClick(coord)}
+                      className={`w-[48px] h-[34px] rounded-lg p-0.5 flex items-center justify-center text-center transition-all cursor-pointer select-none font-mono ${
+                        isClaimed
+                          ? 'bg-[#10B981] text-black font-black border border-white/60'
+                          : isRevealed
+                          ? 'bg-black/[0.06] dark:bg-white/10 hover:bg-black/[0.09] dark:hover:bg-white/15 border border-black/10 dark:border-white/20 text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'bg-[#F3F4F6] dark:bg-[#232323] hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-800 text-neutral-500 dark:hover:text-neutral-300 font-bold'
+                      }`}
+                      title={pair ? `Pair: ${pair.pair_a}, ${pair.pair_b}` : 'Click to reveal'}
+                    >
+                      {isRevealed ? (
+                        pair ? (
+                          <span className="text-[9px] font-mono whitespace-nowrap leading-none px-0.5">
+                            {pair.pair_a}, {pair.pair_b}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono whitespace-nowrap leading-none">...</span>
+                        )
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ── ROW 4: Submit Claim Bar (Single Coordinate Input) ── */}
+          <div className="bg-transparent text-neutral-900 dark:text-white p-4 w-full">
+            <form
+              onSubmit={handleSubmitPair}
+              className="flex flex-col gap-3"
+            >
+              <div className="flex-1">
+                <label className="text-[10px] uppercase font-bold text-neutral-700 dark:text-neutral-300 mb-1 block">
+                  Coordinate to Claim (A1..Z26)
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     value={coordinateInput}
-                    onChange={(e) => setCoordinateInput(e.target.value)}
-                    placeholder="Enter Coordinate (e.g. A3)"
-                    className="w-full h-11 px-3.5 rounded-xl bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] uppercase"
+                    onChange={(e) => setCoordinateInput(e.target.value.toUpperCase())}
+                    placeholder="e.g. B10"
+                    className="w-full h-11 pl-4 pr-12 rounded-xl bg-[#F3F4F6] dark:bg-[#232323] text-neutral-900 dark:text-white placeholder-neutral-500 font-mono text-sm focus:outline-none uppercase"
                   />
-                  {activeFoundCodepair && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-emerald-400 font-mono font-bold pointer-events-none">
-                      Codepair: {activeFoundCodepair}
-                    </span>
-                  )}
+                  <button
+                    type="submit"
+                    disabled={isClaiming || isBoardCompleted}
+                    aria-label="Verify and claim"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isClaiming ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <ArrowRight className="size-4 text-white" />
+                    )}
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto h-11 px-5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-black font-extrabold text-xs sm:text-sm tracking-wide transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5"
-                >
-                  <Trophy className="size-4" />
-                  <span>Verify & Claim</span>
-                </button>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

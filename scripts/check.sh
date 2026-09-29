@@ -53,4 +53,33 @@ run_step() {
 run_step lint bun run lint
 run_step typecheck bun run typecheck
 
+# Build-time guard: ConnectKitProvider must be nested inside WagmiProvider
+# in src/main.tsx. Catches a silently-broken provider tree before it ships.
+check_providers() {
+  local missing=0
+  for provider in WagmiProvider QueryClientProvider ConnectKitProvider; do
+    if ! grep -q "${provider}" src/main.tsx; then
+      echo "check: ERROR: ${provider} missing from src/main.tsx" >&2
+      missing=1
+    fi
+  done
+  if [ "${missing}" -ne 0 ]; then
+    return 1
+  fi
+  wagmi_line=$(grep -n "<WagmiProvider" src/main.tsx | head -1 | cut -d: -f1)
+  query_line=$(grep -n "<QueryClientProvider" src/main.tsx | head -1 | cut -d: -f1)
+  connectkit_line=$(grep -n "<ConnectKitProvider" src/main.tsx | head -1 | cut -d: -f1)
+  app_line=$(grep -n "<App" src/main.tsx | head -1 | cut -d: -f1)
+  if [ -z "${wagmi_line}" ] || [ -z "${query_line}" ] || [ -z "${connectkit_line}" ] || [ -z "${app_line}" ] \
+    || [ "${wagmi_line}" -ge "${query_line}" ] || [ "${query_line}" -ge "${connectkit_line}" ] \
+    || [ "${connectkit_line}" -ge "${app_line}" ]; then
+    echo "check: ERROR: provider nesting order broken in src/main.tsx (need WagmiProvider > QueryClientProvider > ConnectKitProvider > App)" >&2
+    return 1
+  fi
+  echo "Provider nesting OK"
+  return 0
+}
+
+run_step provider-nesting check_providers
+
 exit "${fail}"

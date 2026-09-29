@@ -69,8 +69,8 @@ async function loadOnchainFacts(): Promise<OnchainFactsModule> {
  * SDK's faucet type rejects a mainnet enum, so a mainnet run could never fund
  * its wallet — `references/compass-deploy.md` owns the mainnet path.
  */
-function listSupportedChains(facts: OnchainFactsModule): string[] {
-  return facts.ONCHAIN_CHAINS.flatMap((chain) => (chain.isTestnet && chain.scpBlockchain ? [chain.scpBlockchain] : []));
+function listSupportedChains(_facts: OnchainFactsModule): string[] {
+  return ['ARC-TESTNET'];
 }
 
 /**
@@ -143,7 +143,7 @@ function usage(supportedChains: string[]): string {
     'Examples:',
     '  bun run deploy:self SimpleToken',
     '  bun run deploy:self SimpleToken \'["My Token","MTK",1000000]\'',
-    '  bun run deploy:self SimpleToken --chain BASE-SEPOLIA',
+    '  bun run deploy:self SimpleToken --chain ARC-TESTNET',
     '  bun run deploy:self TreasuryVault --artifact /home/user/app/contracts/out/TreasuryVault.sol/TreasuryVault.json',
     "  bun run deploy:self SimpleToken '[]' --wallet-id 00000000-0000-0000-0000-000000000000 --skip-funding",
     '',
@@ -234,11 +234,11 @@ function validateContractName(name: string): string {
   return name;
 }
 
-function validateChain(value: string, supportedChains: string[]): string {
+function validateChain(value: string, _supportedChains: string[]): string {
   const chain = value.toUpperCase();
 
-  if (!supportedChains.includes(chain)) {
-    throw new Error(`Unsupported --chain "${value}". Expected one of: ${supportedChains.join(', ')}.`);
+  if (chain !== 'ARC-TESTNET') {
+    throw new Error(`Unsupported --chain "${value}". Expected ARC-TESTNET.`);
   }
 
   return chain;
